@@ -66,7 +66,6 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mBluetoothGatt;
     private RequestQueue queue;
     private String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
-
     private String databaseEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything";
 
     private int mConnectionState = STATE_DISCONNECTED;

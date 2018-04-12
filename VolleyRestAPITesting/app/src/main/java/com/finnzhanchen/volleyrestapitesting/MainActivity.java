@@ -1,5 +1,6 @@
 package com.finnzhanchen.volleyrestapitesting;
 
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,6 +8,7 @@ import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -23,27 +25,54 @@ import org.w3c.dom.Text;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
-
+    private String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
+    String url = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/test_coordinate_endpoint";
+    String url2 = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/test";
+    RequestQueue queue;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final TextView mTextView = (TextView) findViewById(R.id.text);
-        // Instantiate the RequestQueue.
-        //RequestQueue queue = Volley.newRequestQueue(this);
 
+        /*
         // Instantiate the cache
         Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
         // Set up the network to use HttpURLConnection as the HTTP client.
         Network network = new BasicNetwork(new HurlStack());
         // Instantiate the RequestQueue with the cache and network.
         RequestQueue queue = new RequestQueue(cache, network);
+        */
+        // Instantiate the RequestQueue.
+        // Instantiate the cache
+        Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
+        // Set up the network to use HttpURLConnection as the HTTP client.
+        Network network = new BasicNetwork(new HurlStack());
+        // Instantiate the RequestQueue with the cache and network.
+        queue = new RequestQueue(cache, network);
         queue.start();
-        String url = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything";
-        getRequest(queue, url);
-        postRequest(queue, url, "2013", "mac_asd", "-83");
+
+
+        final Handler handler = new Handler();
+        final int delay = 3000; //milliseconds
+
+        handler.postDelayed(new Runnable(){
+            public void run(){
+                // Update current location with a new circle
+                getRequest(queue, url);
+                handler.postDelayed(this, delay);
+            }
+        }, delay);
+
+
+        //getRequest(queue, url);
+
+        //getRequest(queue, url);
+        //postRequest(queue, url2, "2013", "mac_asd", "-83");
+
 
     }
 
@@ -53,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         if (!response.equals(null)) {
+                            final TextView mTextView = (TextView) findViewById(R.id.text);
+                            mTextView.setText(response);
                             // Display the first 500 characters of the response string.
                             Log.e("getRequest", "Response is: " + response);
                         } else {
@@ -62,17 +93,23 @@ public class MainActivity extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("error is ", "" + error);
+                Log.e("getRequest ", "" + error);
             }
         }) {
             // Authorisation
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                params.put("Authorization", "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7");
+                params.put("Authorization", AUTHORISATION_BEARER);
                 return params;
             }
         };
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
@@ -83,24 +120,23 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(String response) {
                         if (!response.equals(null)) {
-                            // Display the first 500 characters of the response string.
-                            Log.e("getRequest", "Response is: " + response);
+                            Log.e("postRequest", "Post Successful");
                         } else {
-                            Log.e("getRequest", "Your Array Response Data Null");
+                            Log.e("postRequest", "Your Array Response Data Null");
                         }
                     }
 
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("error is ", "" + error);
+                Log.e("postRequest ", "" + error);
             }
         }) {
             // Authorisation
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-                params.put("Authorization", "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7");
+                params.put("Authorization", AUTHORISATION_BEARER);
                 return params;
             }
             //Pass Your Parameters here

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://D:\Github\IoT_Indoor_localisation\LSR_DataCollection-master\DisplayLoc.iml" filepath="D:\Github\IoT_Indoor_localisation\LSR_DataCollection-master\DisplayLoc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LSR_DataCollection-master.iml" filepath="$PROJECT_DIR$/LSR_DataCollection-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+    </modules>
+  </component>
+</project>
