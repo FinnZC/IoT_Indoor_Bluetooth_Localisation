@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
@@ -57,7 +58,7 @@ public class Activity_1_Maps extends AppCompatActivity
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
     LatLng startPosition = new LatLng(55.94450423292264,-3.1866753207041816);
-    private LatLng estimatedCurrentLocation = new LatLng(55.94447543468454,-3.1866848659837546);
+    private LatLng estimatedCurrentLocation = new LatLng(55.94442483611098, -3.1869354332123536);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
@@ -248,6 +249,25 @@ public class Activity_1_Maps extends AppCompatActivity
             circle.setZIndex(2);
             circlesMap.put(macAddress, circle);
         }
+
+        /////// TEST ONLY REMOVE AFTER FINISH
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("F17FB178EA3D"))
+                .radius(3.7802263066558126) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x552cdae0)).setZIndex(2);
+
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("F15576CB0CF8"))
+                .radius(3.8409708928800175) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x552cdae0)).setZIndex(2);
+
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("FD8185988862"))
+                .radius(4.654966582178155) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x552cdae0)).setZIndex(2);
     }
 
     public void updateCircleOnMap(String deviceMac, float distanceReached){
@@ -278,7 +298,7 @@ public class Activity_1_Maps extends AppCompatActivity
                     @Override
                     public void onResponse(String response) {
                         if (!response.equals(null)) {
-                            try { // Filters responses not relevant
+                            try { // Filters irrelevant responses
                                 // response is formated into
                                 // line 1 is estimated location
                                 // the rest is mac_address and its distance reached
@@ -290,8 +310,11 @@ public class Activity_1_Maps extends AppCompatActivity
                                     Log.e("getRequest", "Estimated location is " + estimatedLatLng[0] + "," + estimatedLatLng[1]);
                                     estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
 
+                                } else if (lines[0].equals("Not enough beacons")){
+                                    Toast.makeText( Activity_1_Maps.this,"Not enough beacons nearby to estimate your location!", Toast.LENGTH_LONG).show();
+                                    Log.e("getRequest", "Not enough beacons.");
                                 } else{
-                                    Log.e("getRequest", "Location could not be estimated. ");
+                                    Log.e("getRequest", "response: " + lines[0]);
                                 }
 
                                 // Update beacons distance reached
@@ -303,7 +326,7 @@ public class Activity_1_Maps extends AppCompatActivity
                                     //Log.e(deviceMac, "distance reached: "+ Float.toString(distanceReached));
                                 }
                             }catch (Exception e){
-                                //e.printStackTrace();
+                                Log.e("getRequest", "Irrelevant response: " + response);
                             }
                         } else {
                             Log.e("getRequest", "Your Array Response Data Null");
