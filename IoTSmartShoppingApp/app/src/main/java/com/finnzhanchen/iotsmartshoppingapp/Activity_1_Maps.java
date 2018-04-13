@@ -139,26 +139,7 @@ public class Activity_1_Maps extends AppCompatActivity
         catch (java.lang.IllegalStateException ise) {
             System.out.println("IllegalStateException thrown [onConnected]");
         }
-
-        initialiseMap();
-        // Initialise requestQueue for GET and POST
-        // Instantiate the cache
-        Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
-        // Set up the network to use HttpURLConnection as the HTTP client.
-        Network network = new BasicNetwork(new HurlStack());
-        // Instantiate the RequestQueue with the cache and network.
-        queue = new RequestQueue(cache, network);
-        // When a request finishes, it updates the current location
-        queue.addRequestFinishedListener(new RequestQueue.RequestFinishedListener<StringRequest>() {
-            @Override
-            public void onRequestFinished(Request<StringRequest> request) {
-                updateEstimatedCurrentLocation();
-
-            }
-        });
-        queue.start();
-        updateEstimatedCurrentLocation();
-
+        setUp();
     }
 
     @Override
@@ -182,6 +163,24 @@ public class Activity_1_Maps extends AppCompatActivity
         System.out.println(" >>>> onConnectionFailed");
     }
 
+    public void setUp(){
+        // Initialise requestQueue for GET and POST
+        // Instantiate the cache
+        Cache cache = new DiskBasedCache(getCacheDir(), 1024 * 1024); // 1MB cap
+        // Set up the network to use HttpURLConnection as the HTTP client.
+        Network network = new BasicNetwork(new HurlStack());
+        // Instantiate the RequestQueue with the cache and network.
+        queue = new RequestQueue(cache, network);
+        // When a request finishes, it calls updateEstimatedCurrentLocation() repeatedly
+        queue.addRequestFinishedListener(new RequestQueue.RequestFinishedListener<StringRequest>() {
+            @Override
+            public void onRequestFinished(Request<StringRequest> request) {
+                updateEstimatedCurrentLocation();
+            }
+        });
+        queue.start();
+        initialiseMap();
+    }
 
     public void initialiseMap(){
         // Set up the real position from Wifi and GPS so that I can compare the difference
@@ -210,17 +209,7 @@ public class Activity_1_Maps extends AppCompatActivity
         // Plot Circles on map
         plotCirclesOnMap();
         // Update current location every 3 second
-        final Handler handler = new Handler();
-        final int delay = 3000; //milliseconds
-
-        handler.postDelayed(new Runnable(){
-            public void run(){
-                // Update current location with a new circle
-                updateEstimatedCurrentLocation();
-                handler.postDelayed(this, delay);
-            }
-        }, delay);
-
+        updateEstimatedCurrentLocation();
     }
 
     public void setUpRealPosition(){
