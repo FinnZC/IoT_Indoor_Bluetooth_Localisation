@@ -1,0 +1,6 @@
+[submodule "margus-report"]
+	path = margus-report
+	url = git@github.com:modulo-/IoTSSC-report.git
+[submodule "nrf5-sdk-clion"]
+	path = nrf5-sdk-clion
+	url = git@github.com:Jumperr-labs/nrf5-sdk-clion.git
