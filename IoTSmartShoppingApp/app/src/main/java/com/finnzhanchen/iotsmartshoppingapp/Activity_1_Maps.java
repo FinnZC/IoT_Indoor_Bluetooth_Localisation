@@ -57,8 +57,8 @@ public class Activity_1_Maps extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
-    LatLng startPosition = new LatLng(55.94450423292264,-3.1866753207041816);
-    private LatLng estimatedCurrentLocation = new LatLng(55.94440764802354,-3.186915527272974);
+    private LatLng startPosition = new LatLng(55.94450423292264,-3.1866753207041816);
+    private LatLng estimatedCurrentLocation = new LatLng(55.94448194885665, -3.186911600186534);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
@@ -190,7 +190,7 @@ public class Activity_1_Maps extends AppCompatActivity
                 .fillColor(0x99ff0000));
         estimatedCurrentLocationCircle.setZIndex(2);
         // Move camera to startPosition which is Appleton Tower
-        CameraUpdate startLocationCameraUpdate = CameraUpdateFactory.newLatLngZoom(startPosition, 50);
+        CameraUpdate startLocationCameraUpdate = CameraUpdateFactory.newLatLngZoom(startPosition, 40);
         mMap.animateCamera(startLocationCameraUpdate);
         // Add floor map to the Google Map
         LatLngBounds atLvl5Bounds = new LatLngBounds(
@@ -242,7 +242,7 @@ public class Activity_1_Maps extends AppCompatActivity
                     .center(beaconsMap.get(macAddress).position)
                     .radius(1) // radius of 5 metres
                     .strokeColor(Color.parseColor("#3170d6"))
-                    .fillColor(0x552cdae0));
+                    .fillColor(0x302cdae0));
             circle.setZIndex(2);
             beaconsMap.get(macAddress).circle = circle;
         }
@@ -250,21 +250,19 @@ public class Activity_1_Maps extends AppCompatActivity
         /////// TEST ONLY REMOVE AFTER FINISH
         mMap.addCircle(new CircleOptions()
                 .center(beaconsMap.get("F17FB178EA3D").position)
-                .radius(5.1373696851890704) // radius of 5 metres
+                .radius(6.191736422399997) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
-                .fillColor(0x552cdae0)).setZIndex(2);
-
-        mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("F15576CB0CF8").position)
-                .radius(4.065820943238096) // radius of 5 metres
-                .strokeColor(Color.parseColor("#3170d6"))
-                .fillColor(0x552cdae0)).setZIndex(2);
-
+                .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()
                 .center(beaconsMap.get("FD8185988862").position)
-                .radius(4.279035811928265) // radius of 5 metres
+                .radius(2.538792345985605) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
-                .fillColor(0x552cdae0)).setZIndex(2);
+                .fillColor(0x302cdae0)).setZIndex(2);
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("F15576CB0CF8").position)
+                .radius(6.2565368490208115) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x302cdae0)).setZIndex(2);
     }
 
     public void updateCircleOnMap(String deviceMac, float distanceReached){
