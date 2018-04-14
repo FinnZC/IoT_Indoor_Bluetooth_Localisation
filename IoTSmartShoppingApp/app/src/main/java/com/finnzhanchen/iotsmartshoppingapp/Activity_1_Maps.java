@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -40,6 +39,7 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.HashMap;
@@ -58,29 +58,24 @@ public class Activity_1_Maps extends AppCompatActivity
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
     LatLng startPosition = new LatLng(55.94450423292264,-3.1866753207041816);
-    private LatLng estimatedCurrentLocation = new LatLng(55.94442483611098, -3.1869354332123536);
+    private LatLng estimatedCurrentLocation = new LatLng(55.94440764802354,-3.186915527272974);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
-    // Circle represents distance derived from RSSI signals
-    // this map keeps track of the reference so the circles on map can be
-    // removed and updated when new data is received from the cloud server
-    private static HashMap<String, Circle> circlesMap = new HashMap<>();
     // Initialise beacons on a map
-    private static final HashMap<String, LatLng> beaconsMap;
-
+    private static final HashMap<String, Beacon> beaconsMap;
     static {
         beaconsMap = new HashMap<>();
-        beaconsMap.put("ED23C0D875CD", new LatLng(55.9444578385393,-3.1866151839494705));
-        beaconsMap.put("E7311A8EB6D7", new LatLng(55.94444244275808,-3.18672649562358860));
-        beaconsMap.put("C7BC919B2D17", new LatLng(55.94452336441765,-3.1866540759801865));
-        beaconsMap.put("EC75A5AD8851", new LatLng(55.94452261340533,-3.1867526471614838));
-        beaconsMap.put("FE12DEF2C943", new LatLng(55.94448393625199,-3.1868280842900276));
-        beaconsMap.put("C03B5CFA00B8", new LatLng(55.94449050761571,-3.1866483762860294));
-        beaconsMap.put("E0B83A2F802A", new LatLng(55.94443774892113,-3.1867992505431175));
-        beaconsMap.put("F15576CB0CF8", new LatLng(55.944432116316044,-3.186904862523079));
-        beaconsMap.put("F17FB178EA3D", new LatLng(55.94444938963575,-3.1869836524128914));
-        beaconsMap.put("FD8185988862", new LatLng(55.94449107087541,-3.186941407620907));
+        beaconsMap.put("ED23C0D875CD", new Beacon("ED23C0D875CD", new LatLng(55.9444578385393,-3.1866151839494705)));
+        beaconsMap.put("E7311A8EB6D7", new Beacon("E7311A8EB6D7", new LatLng(55.94444244275808,-3.18672649562358860)));
+        beaconsMap.put("C7BC919B2D17", new Beacon("C7BC919B2D17", new LatLng(55.94452336441765,-3.1866540759801865)));
+        beaconsMap.put("EC75A5AD8851", new Beacon("EC75A5AD8851", new LatLng(55.94452261340533,-3.1867526471614838)));
+        beaconsMap.put("FE12DEF2C943", new Beacon("FE12DEF2C943", new LatLng(55.94448393625199,-3.1868280842900276)));
+        beaconsMap.put("C03B5CFA00B8", new Beacon("C03B5CFA00B8", new LatLng(55.94449050761571,-3.1866483762860294)));
+        beaconsMap.put("E0B83A2F802A", new Beacon("E0B83A2F802A", new LatLng(55.94443774892113,-3.1867992505431175)));
+        beaconsMap.put("F15576CB0CF8", new Beacon("F15576CB0CF8", new LatLng(55.944432116316044,-3.186904862523079)));
+        beaconsMap.put("F17FB178EA3D", new Beacon("F17FB178EA3D", new LatLng(55.94444938963575,-3.1869836524128914)));
+        beaconsMap.put("FD8185988862", new Beacon("FD8185988862", new LatLng(55.94449107087541,-3.186941407620907)));
     }
 
     @Override
@@ -184,9 +179,9 @@ public class Activity_1_Maps extends AppCompatActivity
     }
 
     public void initialiseMap(){
-        // Set up the real position from Wifi and GPS so that I can compare the difference
+        // Enable current locations from Wifi and GPS so that I can compare the difference
         // between bluetooth estimated and Wifi & GPS estimated locations
-        setUpRealPosition();
+        setUpGoogleMaps();
         // Initialise start position circle
         estimatedCurrentLocationCircle = mMap.addCircle(new CircleOptions()
                 .center(estimatedCurrentLocation)
@@ -213,7 +208,7 @@ public class Activity_1_Maps extends AppCompatActivity
         updateEstimatedCurrentLocation();
     }
 
-    public void setUpRealPosition(){
+    public void setUpGoogleMaps(){
         // Can we access the user’s current location?
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) ==
@@ -231,8 +226,9 @@ public class Activity_1_Maps extends AppCompatActivity
 
     public void plotBeaconsOnMap(){
         for(String macAddress : beaconsMap.keySet()){
-            mMap.addMarker(new MarkerOptions()
-                    .position(beaconsMap.get(macAddress))
+            // Save the reference of the marker on the Beacon object
+            beaconsMap.get(macAddress).marker = mMap.addMarker(new MarkerOptions()
+                    .position(beaconsMap.get(macAddress).position)
                     .anchor(0.5f, 0.5f)
                     .title(macAddress)
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.bluetooth_beacons)));
@@ -241,44 +237,47 @@ public class Activity_1_Maps extends AppCompatActivity
 
     public void plotCirclesOnMap(){
         for(String macAddress : beaconsMap.keySet()){
+            // Save the reference of the circle on Beacon object
             Circle circle = mMap.addCircle(new CircleOptions()
-                    .center(beaconsMap.get(macAddress))
+                    .center(beaconsMap.get(macAddress).position)
                     .radius(1) // radius of 5 metres
                     .strokeColor(Color.parseColor("#3170d6"))
                     .fillColor(0x552cdae0));
             circle.setZIndex(2);
-            circlesMap.put(macAddress, circle);
+            beaconsMap.get(macAddress).circle = circle;
         }
 
         /////// TEST ONLY REMOVE AFTER FINISH
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("F17FB178EA3D"))
-                .radius(3.7802263066558126) // radius of 5 metres
+                .center(beaconsMap.get("F17FB178EA3D").position)
+                .radius(5.1373696851890704) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x552cdae0)).setZIndex(2);
 
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("F15576CB0CF8"))
-                .radius(3.8409708928800175) // radius of 5 metres
+                .center(beaconsMap.get("F15576CB0CF8").position)
+                .radius(4.065820943238096) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x552cdae0)).setZIndex(2);
 
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("FD8185988862"))
-                .radius(4.654966582178155) // radius of 5 metres
+                .center(beaconsMap.get("FD8185988862").position)
+                .radius(4.279035811928265) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x552cdae0)).setZIndex(2);
     }
 
     public void updateCircleOnMap(String deviceMac, float distanceReached){
-        circlesMap.get(deviceMac).remove();
+        beaconsMap.get(deviceMac).circle.remove();
         Circle circle = mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get(deviceMac))
+                .center(beaconsMap.get(deviceMac).position)
                 .radius(distanceReached) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x552cdae0));
         circle.setZIndex(2);
-        circlesMap.put(deviceMac, circle);
+        beaconsMap.get(deviceMac).circle = circle;
+        // Update the market with a new title
+        beaconsMap.get(deviceMac).marker.setTitle(deviceMac + " - " + Float.toString(distanceReached));
     }
 
     public void updateEstimatedCurrentLocation(){
@@ -388,7 +387,6 @@ public class Activity_1_Maps extends AppCompatActivity
                 params.put("rssi", rssi);
                 return params;
             }
-
         };
         stringRequest.setRetryPolicy(new DefaultRetryPolicy(
                 5,
@@ -420,7 +418,7 @@ public class Activity_1_Maps extends AppCompatActivity
     public void testDistanceBetweenPoints(){
         for(String macAddress : beaconsMap.keySet()){
             for(String macAddress2 : beaconsMap.keySet()){
-                double distance = distanceBetweenTwoLatLng(beaconsMap.get(macAddress), beaconsMap.get(macAddress2));
+                double distance = distanceBetweenTwoLatLng(beaconsMap.get(macAddress).position, beaconsMap.get(macAddress2).position);
                 Log.e("testDistanceBetweenPont", macAddress + " to " + macAddress2 + " is " + Double.toString(distance) + " metres");
             }
         }
