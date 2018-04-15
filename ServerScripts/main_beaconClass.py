@@ -78,14 +78,6 @@ def calculate_trilateration_point_ecef(base_station_list):
 
 ######################## WRITTEN BY STUNDET FINN ZHAN CHEN ########################################
 
-def getSecondsReference(lastTimestamp):
-    # Timestamp is of this string format "yyyy-MM-dd HH:mm:ss.SSS"
-    hourMinuteSecondMillisecondReference = lastTimestamp.split(" ")[1].split(":")
-    totalSecondsReference = float(hourMinuteSecondMillisecondReference[2]) \
-                            + float(hourMinuteSecondMillisecondReference[1]) * 60 \
-                            + float(hourMinuteSecondMillisecondReference[0]) * 60 * 60
-    return totalSecondsReference
-
 class Beacon(object):
     def __init__(self, deviceMac, lat, lng, txPower):
         self.deviceMac = deviceMac
@@ -116,9 +108,6 @@ class Beacon(object):
             final_list = [x for x in final_list if (x < mean + 2 * sd)]
             return np.mean(final_list)
 
-
-
-
 def getThreeBeaconsForTrilateration(discoveredBeacons):
     # Return 3 closest beacons
     threeBeacons = list()
@@ -126,11 +115,22 @@ def getThreeBeaconsForTrilateration(discoveredBeacons):
     for beacon in discoveredBeacons:
         distances[beacon.getDistanceToBeacon()] = beacon
 
-    # Return the 3 closet beacons
+    # Return the 3 closest beacons
     for distance in sorted(distances)[:3]:
         threeBeacons.append(distances[distance])
 
     return threeBeacons
+
+def getSeconds(lastTimestamp):
+    # Timestamp is of this string format "yyyy-MM-dd HH:mm:ss.SSS"
+    hourMinuteSecondMillisecondReference = lastTimestamp.split(" ")[1].split(":")
+    totalSecondsReference = float(hourMinuteSecondMillisecondReference[2]) \
+                            + float(hourMinuteSecondMillisecondReference[1]) * 60 \
+                            + float(hourMinuteSecondMillisecondReference[0]) * 60 * 60
+    return totalSecondsReference
+
+def timeDifference(timeReference, time):
+    return timeReference - time <= 3
 
 if __name__ == "__main__":
     beaconsMap = {
@@ -152,27 +152,34 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization":"Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    url = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything'
+    estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/estimatedposition'
 
-    r = requests.get(url, headers=myheaders)
+    readingsResponse = requests.get(readingsUrl, headers=myheaders)
     #print(r.text)
     #print(r.json())
 
-    # Reverse the json file and read the first 20 key value pairs of the reversed
-    # list to get the latest discovery of beacons
-    if len(r.json()) > 0:
-        lastTimestamp = r.json()[len(r.json())-1]["timestamp"] # Get last timestamp
-        # Timestamp is of this format "yyyy-MM-dd HH:mm:ss.SSS"
-        timeReference = getSecondsReference(lastTimestamp)
+    # ALL CONTENT OF THE PRINT STATEMENT HAVE BEEN FORMATTED IN THE FOLLOWING WAY
+    # LINE 1 CONTAINS THE ESTIMATED POSITION
+    # ALL OTHER LIENS CONTAINS THE BEACON'S DEVICE_MAC AND THE DISTANCE TO BEACON
+    # NOTE WHEN THERE ARE NO ENOUGH BEACONS FOR TRILATERATION, THE LAST KNOWN POSITION WILL BE USED
+    # TO INTERPOLATE THE NEW POSITION. IN THIS CASE THE LAST KNOWN POSITION IS TREATED AS A BEACON
+    # AND ITS DISTANCE TO LAST KNOWN POSITION IS ALSO PRINTED AS A BEACON
+    # THE PURPOSE OF THIS IS SO THAT IT CAN BE VISUALISED ON THE ANDROID APP
+    if len(readingsResponse.json()) > 0:
+        # This is used as a reference timestamp to get all readings in the past x seconds
+        lastTimestamp = readingsResponse.json()[len(readingsResponse.json()) - 1]["timestamp"] # Get last timestamp
+        timeReference = getSeconds(lastTimestamp)
 
         # Start iteration from the last item (newest beacon info)
-        for item in r.json()[::-1]:
+        # Reverse the json file and read all readings from the past 3 seconds
+        for item in readingsResponse.json()[::-1]:
             try:
                 timestamp = item["timestamp"]
                 device_mac =  item["device_mac"]
                 rssi = int(item["rssi"])
                 # only considers values in the past 3 seconds
-                if (abs(timeReference - getSecondsReference(timestamp)) <= 3):
+                if timeDifference(timeReference, getSeconds(timestamp)) <= 3:
                     #print(timestamp + " | " + device_mac + " | " + str(rssi))
                     if not device_mac in discoveredBeacons:
                         # convert metres to kilometres for the trilateration algorithm later
@@ -186,9 +193,11 @@ if __name__ == "__main__":
                 #print("Not in format")
                 pass
 
+    # Base stations for trilateration
+    baseStationsForTrilateration = list()
     if len(discoveredBeacons) >= 3:
         threeBeaconsForTrilateration = getThreeBeaconsForTrilateration(discoveredBeacons)
-        baseStationsForTrilateration = list()
+
         # distance in km
         for beacon in threeBeaconsForTrilateration:
             baseStationsForTrilateration.append(
@@ -201,7 +210,54 @@ if __name__ == "__main__":
             print("null")
         else:
             # Successful estimated the position
-            print(repr(estimated_lat+latLngCalibration[0]) + "," + repr(estimated_lon+latLngCalibration[1]))
+            # post estimated position to the Cloud
+            requests.post(estimatedPositionUrl, data={"timestamp": lastTimestamp,
+                                                        "lat": repr(estimated_lat),
+                                                        "lon": repr(estimated_lon)
+                                                        }, headers = myheaders)
+
+            print(repr(estimated_lat)  + "," + repr(estimated_lon)) # might need to calibrate the algorithm response
+    elif len(discoveredBeacons) == 2:
+        # Interpolating 2 beacons with the last estimated position
+        estimatedPositionResponse = requests.get(estimatedPositionUrl, headers=myheaders)
+        # Get last item which is the latest estimated position
+        try:
+            lastEstimatedPositionItem = estimatedPositionResponse.json()[::-1][0]
+            timestamp = lastEstimatedPositionItem["timestamp"]
+            past_lat = lastEstimatedPositionItem["lat"]
+            past_lon = lastEstimatedPositionItem["lon"]
+            # Only uses estimated location which were in the past 3 seconds
+            # time difference is also used to estimated how far the user has gone from the past position
+            # using the assumption that the user moves at 1 metres per second
+            # This is used to make the last known position as a beacon with the distance travelled by user as a
+            # clue for interpolation
+            timeDif = timeDifference(timeReference, getSeconds(timestamp))
+            if timeDif <= 5:
+                for beacon in discoveredBeacons:
+                    baseStationsForTrilateration.append(beacon)
+                baseStationsForTrilateration.append(base_station(past_lat, past_lon, (1*timeDif)/1000))
+
+                estimated_lat, estimated_lon = calculate_trilateration_point_ecef(baseStationsForTrilateration)
+
+                if (repr(estimated_lat) == "nan" and repr(estimated_lon) == "nan"):
+                    # Cannot estimate because there is no overlapping areas between the base stations
+                    print("null")
+                else:
+                    # Successful estimated the position
+                    # post estimated position to the Cloud
+                    requests.post(estimatedPositionUrl, data={"timestamp": lastTimestamp,
+                                                              "lat": repr(estimated_lat),
+                                                              "lon": repr(estimated_lon)
+                                                              }, headers=myheaders)
+
+                    print(repr(estimated_lat) + "," + repr(estimated_lon))  # might need to calibrate the algorithm response
+
+                # print the distance and
+                print("LastKnownPosition," + str(1*timeDif))
+
+        except:
+            print("Failed to interpolate")
+
     else:
         # There are no 3 beacons so cannot estimate
         print("Not enough beacons")

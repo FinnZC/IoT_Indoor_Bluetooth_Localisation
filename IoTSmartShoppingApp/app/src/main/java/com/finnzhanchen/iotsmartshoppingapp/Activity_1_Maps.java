@@ -66,6 +66,10 @@ public class Activity_1_Maps extends AppCompatActivity
     private static final HashMap<String, Beacon> beaconsMap;
     static {
         beaconsMap = new HashMap<>();
+        // Last Known Position is acting as a beacon if there are not enough beacons to trilaterate
+        // the position, so if there are 2 beacons nearby then the last known position will be used
+        // to interpolate the new estimated position, this Beacon object is used to visualise the interpolation on the map
+        beaconsMap.put("LastKnownPosition", new Beacon("LastKnownPosition", new LatLng(0,0)));
         beaconsMap.put("ED23C0D875CD", new Beacon("ED23C0D875CD", new LatLng(55.9444578385393,-3.1866151839494705)));
         beaconsMap.put("E7311A8EB6D7", new Beacon("E7311A8EB6D7", new LatLng(55.94444244275808,-3.18672649562358860)));
         beaconsMap.put("C7BC919B2D17", new Beacon("C7BC919B2D17", new LatLng(55.94452336441765,-3.1866540759801865)));
@@ -236,6 +240,7 @@ public class Activity_1_Maps extends AppCompatActivity
     }
 
     public void plotCirclesOnMap(){
+        // Test only
         for(String macAddress : beaconsMap.keySet()){
             // Save the reference of the circle on Beacon object
             Circle circle = mMap.addCircle(new CircleOptions()
@@ -275,7 +280,7 @@ public class Activity_1_Maps extends AppCompatActivity
         circle.setZIndex(2);
         beaconsMap.get(deviceMac).circle = circle;
         // Update the market with a new title
-        beaconsMap.get(deviceMac).marker.setTitle(deviceMac + " - " + Float.toString(distanceReached));
+        beaconsMap.get(deviceMac).marker.setTitle(deviceMac + " - Distance to Beacon: " + Float.toString(distanceReached));
     }
 
     public void updateEstimatedCurrentLocation(){

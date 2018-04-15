@@ -10,7 +10,7 @@ import com.google.android.gms.maps.model.Marker;
 
 public class Beacon {
     public final String deviceMac;
-    public final LatLng position;
+    public LatLng position;
     // Circle represents distance derived from RSSI signals
     // this map keeps track of the reference so the circles on map can be
     // removed and updated when new data is received from the cloud server
