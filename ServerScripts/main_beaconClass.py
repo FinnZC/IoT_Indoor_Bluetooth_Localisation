@@ -1,6 +1,7 @@
 import requests
 import math
 import numpy as np
+import json
 
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
@@ -103,24 +104,19 @@ class Beacon(object):
             mean = np.mean(elements, axis=0)
             sd = np.std(elements, axis=0)
             # Removes outliers and return filtered mean past RSSIs
-            final_list = [x for x in self.pastRssi if (x >= mean - 2 * sd)]
-            final_list = [x for x in final_list if (x <= mean + 2 * sd)]
+            final_list = [x for x in self.pastRssi if (x > mean - 2 * sd)]
+            final_list = [x for x in final_list if (x < mean + 2 * sd)]
             return np.mean(final_list)
-    def debug(self):
-        print(self.deviceMac + " " + str(self.pastRssi) + " " + str(self.getPastRssiAverage()))
 
 def getThreeBeaconsForTrilateration(discoveredBeacons):
-    # Return 3 closest beacons as a list
+    # Return 3 closest beacons
     threeBeacons = list()
     distances = dict() # key is distance and value is Beacon object
-    for deviceMac in discoveredBeacons:
-        distances[beaconsMap[deviceMac].getDistanceToBeacon()] = beaconsMap[deviceMac]
+    for beacon in discoveredBeacons:
+        distances[beacon.getDistanceToBeacon()] = beacon
 
-    # Return the 3 closest beacons by sorting the key which is the distance
-    #print("Three closest beacon")
+    # Return the 3 closest beacons
     for distance in sorted(distances)[:3]:
-        #distances[distance].debug()
-        #print(distances[distance].deviceMac + " " + str(distance))
         threeBeacons.append(distances[distance])
 
     return threeBeacons
@@ -134,23 +130,23 @@ def getSeconds(lastTimestamp):
     return totalSecondsReference
 
 def timeDifference(timeReference, time):
-    return timeReference - time
+    return timeReference - time <= 3
 
 if __name__ == "__main__":
     beaconsMap = {
         "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, 97.25),
         "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, 95.97222222),
         "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, 66.78431373),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, 90.24),
+        "EC75A5AD8851": Beacon("EC75A5AD8851", 55.94452261340533, -3.1867526471614838, 90.24),
         "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, 89.55555556),
         "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, 53.17647059),
         "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, 99.88888889),
-        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, 90.0),
-        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, 85.38888889),
-        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, 90.02941176)
+        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, 96.0),
+        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, 88.38888889),
+        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, 95.02941176)
     }
-    # a map of discovered Beacon objects
-    discoveredBeacons = dict()
+    # a list of discovered Beacon objects
+    discoveredBeacons = list()
     # Calibration required, I found this via eye inspection via my custom Android Google Maps app
     latLngCalibration = (-0.000025, -0.0000025)
 
@@ -164,7 +160,7 @@ if __name__ == "__main__":
     #print(r.json())
 
     # ALL CONTENT OF THE PRINT STATEMENT HAVE BEEN FORMATTED IN THE FOLLOWING WAY
-    # LINE 1 CONTAINS THE ESTIMATED POSITION OR ERROR MESSAGES
+    # LINE 1 CONTAINS THE ESTIMATED POSITION
     # ALL OTHER LIENS CONTAINS THE BEACON'S DEVICE_MAC AND THE DISTANCE TO BEACON
     # NOTE WHEN THERE ARE NO ENOUGH BEACONS FOR TRILATERATION, THE LAST KNOWN POSITION WILL BE USED
     # TO INTERPOLATE THE NEW POSITION. IN THIS CASE THE LAST KNOWN POSITION IS TREATED AS A BEACON
@@ -180,19 +176,17 @@ if __name__ == "__main__":
         for item in readingsResponse.json()[::-1]:
             try:
                 timestamp = item["timestamp"]
-                deviceMac =  item["device_mac"]
+                device_mac =  item["device_mac"]
                 rssi = int(item["rssi"])
                 # only considers values in the past 3 seconds
-                timeDif =timeDifference(timeReference, getSeconds(timestamp))
-                #print(timeDif)
-                if  timeDif <= 8:
+                if timeDifference(timeReference, getSeconds(timestamp)) <= 3:
                     #print(timestamp + " | " + device_mac + " | " + str(rssi))
-                    if not deviceMac in discoveredBeacons:
+                    if not device_mac in discoveredBeacons:
                         # convert metres to kilometres for the trilateration algorithm later
-                        discoveredBeacons[deviceMac] = beaconsMap[deviceMac]
+                        discoveredBeacons.append(beaconsMap[device_mac])
 
                     # record seen rssi value in the past 3 seconds to beacons
-                    beaconsMap[deviceMac].pastRssi.append(rssi)
+                    beaconsMap[device_mac].pastRssi.append(rssi)
                 else:
                     break
             except:
@@ -201,18 +195,13 @@ if __name__ == "__main__":
 
     # Base stations for trilateration
     baseStationsForTrilateration = list()
-    #for device_mac in discoveredBeacons:
-        #print(beaconsMap[device_mac].deviceMac)
-
     if len(discoveredBeacons) >= 3:
-        # returns a
         threeBeaconsForTrilateration = getThreeBeaconsForTrilateration(discoveredBeacons)
-        #for beacon in threeBeaconsForTrilateration:
-            #print(beacon.deviceMac)
+
         # distance in km
         for beacon in threeBeaconsForTrilateration:
             baseStationsForTrilateration.append(
-                base_station(beacon.lat, beacon.lng, beacon.getDistanceToBeacon()/1000)) # convert to km for trilateration
+                base_station(beacon.lat, beacon.lng, beacon.getDistanceToBeacon()))
 
         estimated_lat, estimated_lon = calculate_trilateration_point_ecef(baseStationsForTrilateration)
 
@@ -243,10 +232,10 @@ if __name__ == "__main__":
             # This is used to make the last known position as a beacon with the distance travelled by user as a
             # clue for interpolation
             timeDif = timeDifference(timeReference, getSeconds(timestamp))
-            if timeDif <= 8:
+            if timeDif <= 5:
                 for beacon in discoveredBeacons:
                     baseStationsForTrilateration.append(beacon)
-                baseStationsForTrilateration.append(base_station(past_lat, past_lon, (1*timeDif)/1000)) # convert to km
+                baseStationsForTrilateration.append(base_station(past_lat, past_lon, (1*timeDif)/1000))
 
                 estimated_lat, estimated_lon = calculate_trilateration_point_ecef(baseStationsForTrilateration)
 
@@ -263,6 +252,7 @@ if __name__ == "__main__":
 
                     print(repr(estimated_lat) + "," + repr(estimated_lon))  # might need to calibrate the algorithm response
 
+                # print the distance and
                 print("LastKnownPosition," + str(1*timeDif))
 
         except:
@@ -272,6 +262,5 @@ if __name__ == "__main__":
         # There are no 3 beacons so cannot estimate
         print("Not enough beacons")
 
-    for deviceMac in discoveredBeacons:
-        #discoveredBeacons[deviceMac].debug()
-        print(beaconsMap[deviceMac].deviceMac + "," + str(beaconsMap[deviceMac].getDistanceToBeacon()))
+    for beacon in discoveredBeacons:
+        print(beacon.deviceMac + "," + str(beacon.getDistanceToBeacon()*1000)) # convert km back to metres

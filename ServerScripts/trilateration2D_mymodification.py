@@ -4,8 +4,6 @@
 from __future__ import division
 import json
 import math
-import utm
-
 from json import encoder
 encoder.FLOAT_REPR = lambda o: format(o, '.2f')
 
@@ -71,7 +69,7 @@ def get_all_intersecting_points(circles):
 
 def is_contained_in_circles(point, circles):
     for i in range(len(circles)):
-        if (get_two_points_distance(point, circles[i].center) >= (circles[i].radius)):
+        if (get_two_points_distance(point, circles[i].center) > (circles[i].radius)):
             return False
     return True
 
@@ -85,41 +83,24 @@ def get_polygon_center(points):
     center.y /= num
     return center
 
-def convertToDecimalDegress(metreDistance):
-    return metreDistance/111320
-
-def convertLatLngToUTM(lat, lng):
-    (x, y, _, _) =utm.from_latlon(lat, lng)
-    return x, y
-
-def createUTMPoint(lat, lng):
-    x, y = convertLatLngToUTM(lat, lng)
-    print(x, y)
-    return point(x,y)
-
-
-
-
 if __name__ == '__main__' :
 
-    p1 = createUTMPoint(55.94444938963575,-3.1869836524128914) #f17f
-    p2 = createUTMPoint(55.94449107087541,-3.186941407620907) # fd81
-    p3 = createUTMPoint(55.944432116316044,-3.186904862523079) # f155
+    p1 = point(0, 14)
+    p2 = point(14, 0)
+    p3 = point(0, 8)
+    p4 = point(0, 0)
 
-    c1 = circle(p1, 6.12)
-    c2 = circle(p2, 2.54)
-    c3 = circle(p3, 500.26)
+    c1 = circle(p1, 14)
+    c2 = circle(p2, 14)
+    c3 = circle(p3, 3)
+    c4 = circle(p4, 14)
 
     circle_list = [c1, c2, c3]
-    """, c3"""
 
     inner_points = []
     for p in get_all_intersecting_points(circle_list):
         if is_contained_in_circles(p, circle_list):
-            print(p)
             inner_points.append(p) 
-
-    print(inner_points)
+    
     center = get_polygon_center(inner_points)
-    (lat, lng) = utm.to_latlon(center.x, center.y, 30, 'U')
-    print("Center is x: " + str(lat) + " y: " + str(lng))
+    print("Center is x: " + str(center.x) + " y: " + str(center.y))
