@@ -1,7 +1,7 @@
 import requests
 import math
 import numpy as np
-
+import utm
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
 ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
@@ -20,13 +20,9 @@ def getDistanceFromRSSI(rssi, txPower): # in metres
         return accuracy
 
 
-###################### EXISTING SOLUTION FOR TRILATERATION ##############################
+###################### EXISTING SOLUTION FOR TRILATERATION IN 2D ##############################
 # Source from https://github.com/noomrevlis/trilateration
 # http://en.wikipedia.org/wiki/Trilateration
-# assuming elevation = 0
-# length unit : km
-
-earthR = 6371
 
 class base_station(object):
     def __init__(self, lat, lon, dist):
@@ -34,46 +30,84 @@ class base_station(object):
         self.lon = lon
         self.dist = dist
 
-#using authalic sphere
-#if using an ellipsoid this step is slightly different
-#Convert geodetic Lat/Long to ECEF xyz
-#   1. Convert Lat/Long to radians
-#   2. Convert Lat/Long(radians) to ECEF  (Earth-Centered,Earth-Fixed)
-def convert_geodetci_to_ecef(base_station):
-    x = earthR *(math.cos(math.radians(base_station.lat)) * math.cos(math.radians(base_station.lon)))
-    y = earthR *(math.cos(math.radians(base_station.lat)) * math.sin(math.radians(base_station.lon)))
-    z = earthR *(math.sin(math.radians(base_station.lat)))
-    #print(x, y, z)
-    return np.array([x, y, z])
 
-def calculate_trilateration_point_ecef(base_station_list):
-    P1, P2, P3 = map(convert_geodetci_to_ecef, base_station_list)
-    DistA, DistB, DistC = map(lambda x: x.dist, base_station_list)
+class point(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
-    #vector transformation: circle 1 at origin, circle 2 on x axis
-    ex = (P2 - P1)/(np.linalg.norm(P2 - P1))
-    i = np.dot(ex, P3 - P1)
-    ey = (P3 - P1 - i*ex)/(np.linalg.norm(P3 - P1 - i*ex))
-    ez = np.cross(ex,ey)
-    d = np.linalg.norm(P2 - P1)
-    j = np.dot(ey, P3 - P1)
 
-    #plug and chug using above values
-    x = (pow(DistA,2) - pow(DistB,2) + pow(d,2))/(2*d)
-    y = ((pow(DistA,2) - pow(DistC,2) + pow(i,2) + pow(j,2))/(2*j)) - ((i/j)*x)
+class circle(object):
+    def __init__(self, point, radius):
+        self.center = point
+        self.radius = radius
 
-    # only one case shown here
-    z = np.sqrt(pow(DistA,2) - pow(x,2) - pow(y,2))
 
-    #triPt is an array with ECEF x,y,z of trilateration point
-    triPt = P1 + x*ex + y*ey + z*ez
+class json_data(object):
+    def __init__(self, circles, inner_points, center):
+        self.circles = circles
+        self.inner_points = inner_points
+        self.center = center
 
-    #convert back to lat/long from ECEF
-    #convert to degrees
-    lat = math.degrees(math.asin(triPt[2] / earthR))
-    lon = math.degrees(math.atan2(triPt[1],triPt[0]))
-    return lat, lon
 
+def serialize_instance(obj):
+    d = {}
+    d.update(vars(obj))
+    return d
+
+
+def get_two_points_distance(p1, p2):
+    return math.sqrt(pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2))
+
+
+def get_two_circles_intersecting_points(c1, c2):
+    p1 = c1.center
+    p2 = c2.center
+    r1 = c1.radius
+    r2 = c2.radius
+
+    d = get_two_points_distance(p1, p2)
+    # if to far away, or self contained - can't be done
+    if d >= (r1 + r2) or d <= math.fabs(r1 - r2):
+        return None
+
+    a = (pow(r1, 2) - pow(r2, 2) + pow(d, 2)) / (2 * d)
+    h = math.sqrt(pow(r1, 2) - pow(a, 2))
+    x0 = p1.x + a * (p2.x - p1.x) / d
+    y0 = p1.y + a * (p2.y - p1.y) / d
+    rx = -(p2.y - p1.y) * (h / d)
+    ry = -(p2.x - p1.x) * (h / d)
+    return [point(x0 + rx, y0 - ry), point(x0 - rx, y0 + ry)]
+
+
+def get_all_intersecting_points(circles):
+    points = []
+    num = len(circles)
+    for i in range(num):
+        j = i + 1
+        for k in range(j, num):
+            res = get_two_circles_intersecting_points(circles[i], circles[k])
+            if res:
+                points.extend(res)
+    return points
+
+
+def is_contained_in_circles(point, circles):
+    for i in range(len(circles)):
+        if (get_two_points_distance(point, circles[i].center) >= (circles[i].radius)):
+            return False
+    return True
+
+
+def get_polygon_center(points):
+    center = point(0, 0)
+    num = len(points)
+    for i in range(num):
+        center.x += points[i].x
+        center.y += points[i].y
+    center.x /= num
+    center.y /= num
+    return center
 
 ######################## WRITTEN BY STUNDET FINN ZHAN CHEN ########################################
 
@@ -87,8 +121,20 @@ class Beacon(object):
         # around 1 metres from the beacon, outliers have been removed and the mean is calculated
         # data collected are saved on an excel file and input to this algorithm
         # https://www.kdnuggets.com/2017/02/removing-outliers-standard-deviation-python.html
+        self.umtPoint = self.createUTMPoint(lat, lng)
+        # Do not know the radius at this point
+        self.circle = circle(self.umtPoint, 0)
         self.txPower = txPower
         self.pastRssi = list()
+
+    def convertLatLngToUTM(self, lat, lng):
+        (x, y, _, _) = utm.from_latlon(lat, lng)
+        return x, y
+
+    def createUTMPoint(self, lat, lng):
+        x, y = self.convertLatLngToUTM(lat, lng)
+        #print(x, y)
+        return point(x, y)
 
     def getDistanceToBeacon(self):
         return getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
@@ -135,6 +181,26 @@ def getSeconds(lastTimestamp):
 
 def timeDifference(timeReference, time):
     return timeReference - time
+
+
+def getTrilaterationResult(beacons):
+    circle_list = list()
+    for deviceMac in beacons:
+        beacons[deviceMac].circle.radius = beacons[deviceMac].getDistanceToBeacon()
+        circle_list.append(beacons[deviceMac].circle)
+
+        inner_points = []
+        for p in get_all_intersecting_points(circle_list):
+            if is_contained_in_circles(p, circle_list):
+                inner_points.append(p)
+
+        if len(inner_points) > 0:
+            center = get_polygon_center(inner_points)
+            (lat, lng) = utm.to_latlon(center.x, center.y, 30, 'U')
+            return lat, lng
+        else:
+
+            return "nan", "nan"
 
 if __name__ == "__main__":
     beaconsMap = {
@@ -206,17 +272,10 @@ if __name__ == "__main__":
 
     if len(discoveredBeacons) >= 3:
         # returns a
-        threeBeaconsForTrilateration = getThreeBeaconsForTrilateration(discoveredBeacons)
-        #for beacon in threeBeaconsForTrilateration:
-            #print(beacon.deviceMac)
-        # distance in km
-        for beacon in threeBeaconsForTrilateration:
-            baseStationsForTrilateration.append(
-                base_station(beacon.lat, beacon.lng, beacon.getDistanceToBeacon()/1000)) # convert to km for trilateration
+        #threeBeaconsForTrilateration = getThreeBeaconsForTrilateration(discoveredBeacons)
+        estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
-        estimated_lat, estimated_lon = calculate_trilateration_point_ecef(baseStationsForTrilateration)
-
-        if (repr(estimated_lat) == "nan" and repr(estimated_lon) == "nan"):
+        if (estimated_lat == "nan" or estimated_lon == "nan"):
             # Cannot estimate because there is no overlapping areas between the base stations
             print("null")
         else:
@@ -244,11 +303,8 @@ if __name__ == "__main__":
             # clue for interpolation
             timeDif = timeDifference(timeReference, getSeconds(timestamp))
             if timeDif <= 8:
-                for beacon in discoveredBeacons:
-                    baseStationsForTrilateration.append(beacon)
-                baseStationsForTrilateration.append(base_station(past_lat, past_lon, (1*timeDif)/1000)) # convert to km
 
-                estimated_lat, estimated_lon = calculate_trilateration_point_ecef(baseStationsForTrilateration)
+                estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
                 if (repr(estimated_lat) == "nan" and repr(estimated_lon) == "nan"):
                     # Cannot estimate because there is no overlapping areas between the base stations
