@@ -15,8 +15,6 @@ public class Beacon {
     // this map keeps track of the reference so the circles on map can be
     // removed and updated when new data is received from the cloud server
     public Circle circle;
-    // marker is simply the bluetooth marker on map to represent the locations of the beacons
-    // content will be updated to Name - Distance to Beacon everytime the server returns value
     public Marker marker;
 
     public Beacon(String deviceMac, LatLng position){
