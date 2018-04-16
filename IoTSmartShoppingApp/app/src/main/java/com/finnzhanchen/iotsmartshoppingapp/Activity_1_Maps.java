@@ -254,19 +254,19 @@ public class Activity_1_Maps extends AppCompatActivity
 
         /////// TEST ONLY REMOVE AFTER FINISH
         Circle circle = mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("F17FB178EA3D").position)
-                .radius(6.191736422399997) // radius of 5 metres
+                .center(beaconsMap.get("FE12DEF2C943").position)
+                .radius(3.33) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0));
         circle.setZIndex(2);
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("FD8185988862").position)
-                .radius(6.54) // radius of 5 metres
+                .center(beaconsMap.get("C7BC919B2D17").position)
+                .radius(2.05) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("F15576CB0CF8").position)
-                .radius(6.2565368490208115) // radius of 5 metres
+                .center(beaconsMap.get("EC75A5ED8851").position)
+                .radius(1) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()

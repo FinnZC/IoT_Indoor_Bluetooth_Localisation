@@ -84,7 +84,7 @@ if __name__ == "__main__":
         "ED23C0D875CD": (55.9444578385393, -3.1866151839494705),
         "E7311A8EB6D7": (55.94444244275808, -3.18672649562358860),
         "C7BC919B2D17": (55.94452336441765, -3.1866540759801865),
-        "EC75A5AD8851": (55.94452261340533, -3.1867526471614838),
+        "EC75A5ED8851": (55.94452261340533, -3.1867526471614838),
         "FE12DEF2C943": (55.94448393625199, -3.1868280842900276),
         "C03B5CFA00B8": (55.94449050761571, -3.1866483762860294),
         "E0B83A2F802A": (55.94443774892113, -3.1867992505431175),
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         "ED23C0D875CD": -97.25,
         "E7311A8EB6D7": -95.97222222,
         "C7BC919B2D17": -66.78431373,
-        "EC75A5AD8851": -90.24,
+        "EC75A5ED8851": -90.24,
         "FE12DEF2C943": -89.55555556,
         "C03B5CFA00B8": -53.17647059,
         "E0B83A2F802A": -99.88888889,
@@ -113,12 +113,13 @@ if __name__ == "__main__":
     # Calibration required, I found this via eye inspection via my custom Android Google Maps app
     latLngCalibration = (0.00002, 0.0000025)
     oldlatLngCalibration = (0.000025, 0.0000025)
-    a = "F17FB178EA3D"
-    rssi_a = -110
-    b = "FD8185988862"
-    rssi_b = -98
-    c = "F15576CB0CF8"
-    rssi_c = -99
+    # Imagine at EC75A5AD8851
+    a = "EC75A5ED8851"
+    rssi_a = -90.24
+    b = "FE12DEF2C943"
+    rssi_b = -100
+    c = "C7BC919B2D17"
+    rssi_c = -73
     baseA = base_station(beaconsLocation[a][0], beaconsLocation[a][1], getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])/1000) #in km
     print(a+ " " + str(getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])))
     baseB = base_station(beaconsLocation[b][0], beaconsLocation[b][1],  getDistanceFromRSSI(rssi=rssi_b, txPower=beaconsTxPower[b])/1000) #c0
