@@ -10,15 +10,8 @@ import json
 
 def getDistanceFromRSSI(rssi, txPower): # in metres
     #tx values usually ranges from -59 to -65
-    if rssi == 0:
-        return -1
-
-    ratio = rssi*1.0/txPower;
-    if ratio < 1.0:
-        return math.pow(ratio, 10)
-    else:
-        accuracy = (0.89976) * math.pow(ratio, 7.7095) + 0.111
-        return accuracy
+    #print("RSSI: " + str(rssi) + " txPower:" + str(txPower))
+    return math.pow(10, (txPower - rssi) / (10 * 2))
 
 
 ###################### EXISTING SOLUTION FOR TRILATERATION ##############################
@@ -77,22 +70,6 @@ def calculate_trilateration_point_ecef(base_station_list):
 
 
 ######################## WRITTEN BY STUNDET FINN ZHAN CHEN ########################################
-
-def getSecondsReference(lastTimestamp):
-    # Timestamp is of this string format "yyyy-MM-dd HH:mm:ss.SSS"
-    hourMinuteSecondMillisecondReference = lastTimestamp.split(" ")[1].split(":")
-    totalSecondsReference = float(hourMinuteSecondMillisecondReference[2]) \
-                            + float(hourMinuteSecondMillisecondReference[1]) * 60 \
-                            + float(hourMinuteSecondMillisecondReference[0]) * 60 * 60
-    return totalSecondsReference
-
-class Beacon(object):
-    def __init__(self, deviceMac, lat, lng, txPower):
-        self.deviceMac = deviceMac
-        self.lat = lat
-        self.lng = lng
-        self.txPower = txPower
-
 if __name__ == "__main__":
     threeClosestBeacons= dict()
 
@@ -114,7 +91,6 @@ if __name__ == "__main__":
     # around 1 metres from the beacon, outliers have been removed and the mean is calculated
     # data collected are saved on an excel file and input to this algorithm
     # https://www.kdnuggets.com/2017/02/removing-outliers-standard-deviation-python.html
-
     beaconsTxPower = {
         "ED23C0D875CD": -97.25,
         "E7311A8EB6D7": -95.97222222,
@@ -127,72 +103,23 @@ if __name__ == "__main__":
         "F17FB178EA3D": -88.38888889,
         "FD8185988862": -95.02941176
     }
-
     # Calibration required, I found this via eye inspection via my custom Android Google Maps app
-    latLngCalibration = (-0.000025, -0.0000025)
+    latLngCalibration = (0.00002, 0.0000025)
+    oldlatLngCalibration = (0.000025, 0.0000025)
+    a = "F17FB178EA3D"
+    rssi_a = -110
+    b = "FD8185988862"
+    rssi_b = -98
+    c = "F15576CB0CF8"
+    rssi_c = -99
+    baseA = base_station(beaconsLocation[a][0], beaconsLocation[a][1], getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])/1000) #in km
+    print(a+ " " + str(getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])))
+    baseB = base_station(beaconsLocation[b][0], beaconsLocation[b][1],  getDistanceFromRSSI(rssi=rssi_b, txPower=beaconsTxPower[b])/1000) #c0
+    print(b + " " + str(getDistanceFromRSSI(rssi=rssi_b, txPower=beaconsTxPower[b])))
+    baseC = base_station(beaconsLocation[c][0], beaconsLocation[c][1], getDistanceFromRSSI(rssi=rssi_c, txPower=beaconsTxPower[c])/1000) #c0
+    print(c + " " + str(getDistanceFromRSSI(rssi=rssi_c, txPower=beaconsTxPower[c])))
 
-    # Authorisation header for GET and POST request
-    myheaders = {"Authorization":"Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-
-    url = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything'
-    endpoint = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/get"
-
-
-    r = requests.get(url, headers=myheaders)
-    #print(r.text)
-    #print(r.json())
-
-    # Reverse the json file and read the first 20 key value pairs of the reversed
-    # list to get the latest discovery of beacons
-    if len(r.json()) > 0:
-        lastTimestamp = r.json()[len(r.json())-1]["timestamp"] # Get last timestamp
-        # Timestamp is of this format "yyyy-MM-dd HH:mm:ss.SSS"
-        timeReference = getSecondsReference(lastTimestamp)
-
-        for item in r.json()[::-1]:
-            try:
-                timestamp = item["timestamp"]
-                device_mac =  item["device_mac"]
-                rssi = int(item["rssi"])
-                # only considers values in the past 3 seconds
-                if (abs(timeReference - getSecondsReference(timestamp)) <= 3):
-                    #print(timestamp + " | " + device_mac + " | " + str(rssi))
-                    if not device_mac in threeClosestBeacons:
-                        # convert metres to kilometres for the trilateration algorithm later
-                        threeClosestBeacons[device_mac] = getDistanceFromRSSI(rssi=rssi, txPower=beaconsTxPower.get(device_mac))/1000
-                        #print(getDistanceFromRSSI(rssi=rssi, txPower=-65)/1000)
-                        if len(threeClosestBeacons) == 3:
-                            break
-                else:
-                    break
-            except:
-                #print("Not in format")
-                pass
-
-    if len(threeClosestBeacons) == 3:
-        #print(threeClosestBeacons)
-        base_station_list = list()
-        # distance in km
-        for device_mac in threeClosestBeacons:
-            # beaconsLocation[device_mac][0] is latitude of the beacon
-            # beaconsLocation[device_mac][1] is longitude of the beacon
-            base_station_list.append(
-                base_station(beaconsLocation[device_mac][0],
-                             beaconsLocation[device_mac][1],
-                             threeClosestBeacons.get(device_mac)))
-
-        estimated_lat, estimated_lon = calculate_trilateration_point_ecef(base_station_list)
-
-        if (repr(estimated_lat) == "nan" and repr(estimated_lon) == "nan"):
-            # Cannot estimate because there is no overlapping areas between the base stations
-            print("null")
-        else:
-            # Successful estimated the position
-            print(repr(estimated_lat+latLngCalibration[0]) + "," + repr(estimated_lon+latLngCalibration[1]))
-    else:
-        # There are no 3 beacons so cannot estimate
-        print("No 3 beacons")
-
-    for device_mac in threeClosestBeacons:
-        print(device_mac + "," + str(threeClosestBeacons.get(device_mac)*1000)) # convert km back to metres
-
+    base_station_list = [baseA, baseB, baseC]
+    lat, lon = calculate_trilateration_point_ecef(base_station_list)
+    print(repr(lat) + ", " +repr(lon))
+    print(repr(lat+latLngCalibration[0])  + ", " + repr(lon+latLngCalibration[1]))

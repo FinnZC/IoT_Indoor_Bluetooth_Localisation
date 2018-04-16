@@ -24,13 +24,6 @@ def getDistanceFromRSSI(rssi, txPower): # in metres
 # Source from https://github.com/noomrevlis/trilateration
 # http://en.wikipedia.org/wiki/Trilateration
 
-class base_station(object):
-    def __init__(self, lat, lon, dist):
-        self.lat = lat
-        self.lon = lon
-        self.dist = dist
-
-
 class point(object):
     def __init__(self, x, y):
         self.x = x
@@ -41,20 +34,6 @@ class circle(object):
     def __init__(self, point, radius):
         self.center = point
         self.radius = radius
-
-
-class json_data(object):
-    def __init__(self, circles, inner_points, center):
-        self.circles = circles
-        self.inner_points = inner_points
-        self.center = center
-
-
-def serialize_instance(obj):
-    d = {}
-    d.update(vars(obj))
-    return d
-
 
 def get_two_points_distance(p1, p2):
     return math.sqrt(pow((p1.x - p2.x), 2) + pow((p1.y - p2.y), 2))
@@ -90,7 +69,6 @@ def get_all_intersecting_points(circles):
             if res:
                 points.extend(res)
     return points
-
 
 def is_contained_in_circles(point, circles):
     for i in range(len(circles)):
@@ -204,16 +182,16 @@ def getTrilaterationResult(beacons):
 
 if __name__ == "__main__":
     beaconsMap = {
-        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, 97.25),
-        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, 95.97222222),
-        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, 66.78431373),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, 90.24),
-        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, 89.55555556),
-        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, 53.17647059),
-        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, 99.88888889),
-        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, 90.0),
-        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, 85.38888889),
-        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, 90.02941176)
+        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25),
+        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222),
+        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -66.78431373),
+        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24),
+        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556),
+        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059),
+        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889),
+        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -90.0),
+        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -85.38888889),
+        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -90.02941176)
     }
     # a map of discovered Beacon objects
     discoveredBeacons = dict()
@@ -265,8 +243,6 @@ if __name__ == "__main__":
                 #print("Not in format")
                 pass
 
-    # Base stations for trilateration
-    baseStationsForTrilateration = list()
     #for device_mac in discoveredBeacons:
         #print(beaconsMap[device_mac].deviceMac)
 
@@ -286,7 +262,7 @@ if __name__ == "__main__":
                                                         "lon": repr(estimated_lon)
                                                         }, headers = myheaders)
 
-            print(repr(estimated_lat)  + "," + repr(estimated_lon)) # might need to calibrate the algorithm response
+            print(str(estimated_lat)  + "," + str(estimated_lon)) # might need to calibrate the algorithm response
     elif len(discoveredBeacons) == 2:
         # Interpolating 2 beacons with the last estimated position
         estimatedPositionResponse = requests.get(estimatedPositionUrl, headers=myheaders)
@@ -306,7 +282,7 @@ if __name__ == "__main__":
 
                 estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
-                if (repr(estimated_lat) == "nan" and repr(estimated_lon) == "nan"):
+                if (str(estimated_lat) == "nan" or str(estimated_lon) == "nan"):
                     # Cannot estimate because there is no overlapping areas between the base stations
                     print("null")
                 else:
@@ -317,7 +293,7 @@ if __name__ == "__main__":
                                                               "lon": repr(estimated_lon)
                                                               }, headers=myheaders)
 
-                    print(repr(estimated_lat) + "," + repr(estimated_lon))  # might need to calibrate the algorithm response
+                    print(str(estimated_lat) + "," + str(estimated_lon))  # might need to calibrate the algorithm response
 
                 print("LastKnownPosition," + str(1*timeDif))
 

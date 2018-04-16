@@ -105,12 +105,14 @@ if __name__ == '__main__' :
     p1 = createUTMPoint(55.94444938963575,-3.1869836524128914) #f17f
     p2 = createUTMPoint(55.94449107087541,-3.186941407620907) # fd81
     p3 = createUTMPoint(55.944432116316044,-3.186904862523079) # f155
+    p4 = createUTMPoint(55.94449050761571,-3.1866483762860294) # c0
 
-    c1 = circle(p1, 6.12)
-    c2 = circle(p2, 2.54)
-    c3 = circle(p3, 500.26)
+    c1 = circle(p1, 6.20)
+    c2 = circle(p2, 6.54)
+    c3 = circle(p3, 6.26)
+    c4 = circle(p4, 18)
 
-    circle_list = [c1, c2, c3]
+    circle_list = [c1, c2, c3, c4]
     """, c3"""
 
     inner_points = []
@@ -122,4 +124,4 @@ if __name__ == '__main__' :
     print(inner_points)
     center = get_polygon_center(inner_points)
     (lat, lng) = utm.to_latlon(center.x, center.y, 30, 'U')
-    print("Center is x: " + str(lat) + " y: " + str(lng))
+    print("Center is x: " + str(lat) + "," + str(lng))
