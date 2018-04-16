@@ -57,8 +57,8 @@ public class Activity_1_Maps extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
-    private LatLng startPosition = new LatLng(55.94450423292264,-3.1866753207041816);
-    private LatLng estimatedCurrentLocation = new LatLng(55.944438618273324, -3.1868257092150993);
+    private LatLng startPosition = new LatLng(55.94448236370376, -3.1869789961960424);
+    private LatLng estimatedCurrentLocation = new LatLng(55.94448236370376,-3.1869789961960424);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
@@ -73,7 +73,7 @@ public class Activity_1_Maps extends AppCompatActivity
         beaconsMap.put("ED23C0D875CD", new Beacon("ED23C0D875CD", new LatLng(55.9444578385393,-3.1866151839494705)));
         beaconsMap.put("E7311A8EB6D7", new Beacon("E7311A8EB6D7", new LatLng(55.94444244275808,-3.18672649562358860)));
         beaconsMap.put("C7BC919B2D17", new Beacon("C7BC919B2D17", new LatLng(55.94452336441765,-3.1866540759801865)));
-        beaconsMap.put("EC75A5AD8851", new Beacon("EC75A5AD8851", new LatLng(55.94452261340533,-3.1867526471614838)));
+        beaconsMap.put("EC75A5ED8851", new Beacon("EC75A5ED8851", new LatLng(55.94452261340533,-3.1867526471614838)));
         beaconsMap.put("FE12DEF2C943", new Beacon("FE12DEF2C943", new LatLng(55.94448393625199,-3.1868280842900276)));
         beaconsMap.put("C03B5CFA00B8", new Beacon("C03B5CFA00B8", new LatLng(55.94449050761571,-3.1866483762860294)));
         beaconsMap.put("E0B83A2F802A", new Beacon("E0B83A2F802A", new LatLng(55.94443774892113,-3.1867992505431175)));
@@ -194,7 +194,7 @@ public class Activity_1_Maps extends AppCompatActivity
                 .fillColor(0x99ff0000));
         estimatedCurrentLocationCircle.setZIndex(2);
         // Move camera to startPosition which is Appleton Tower
-        CameraUpdate startLocationCameraUpdate = CameraUpdateFactory.newLatLngZoom(startPosition, 30);
+        CameraUpdate startLocationCameraUpdate = CameraUpdateFactory.newLatLngZoom(startPosition, 20);
         mMap.animateCamera(startLocationCameraUpdate);
         // Add floor map to the Google Map
         LatLngBounds atLvl5Bounds = new LatLngBounds(
@@ -207,7 +207,7 @@ public class Activity_1_Maps extends AppCompatActivity
         // Plot Beacons on map
         plotBeaconsOnMap();
         // Plot Circles on map
-        plotCirclesOnMap();
+        initialiseCirclesOnMap();
         // Update current location every 3 second
         updateEstimatedCurrentLocation();
     }
@@ -239,59 +239,55 @@ public class Activity_1_Maps extends AppCompatActivity
         }
     }
 
-    public void plotCirclesOnMap(){
+    public void initialiseCirclesOnMap(){
         // Test only
         for(String macAddress : beaconsMap.keySet()){
             // Save the reference of the circle on Beacon object
-            Circle circle = mMap.addCircle(new CircleOptions()
+            beaconsMap.get(macAddress).circle = mMap.addCircle(new CircleOptions()
                     .center(beaconsMap.get(macAddress).position)
-                    .radius(1) // radius of 5 metres
+                    .radius(0.1) // radius of 5 metres
                     .strokeColor(Color.parseColor("#3170d6"))
                     .fillColor(0x302cdae0));
-            circle.setZIndex(2);
-            beaconsMap.get(macAddress).circle = circle;
+            // Set Z index so that it appears above the overlayed image of the floor map
+            beaconsMap.get(macAddress).circle.setZIndex(2);
         }
 
         /////// TEST ONLY REMOVE AFTER FINISH
-        mMap.addCircle(new CircleOptions()
+        Circle circle = mMap.addCircle(new CircleOptions()
                 .center(beaconsMap.get("F17FB178EA3D").position)
-                .radius(24.15610905829817) // radius of 5 metres
+                .radius(6.191736422399997) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
-                .fillColor(0x302cdae0)).setZIndex(2);
+                .fillColor(0x302cdae0));
+        circle.setZIndex(2);
+
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("C03B5CFA00B8").position)
-                .radius(21.586780813255363) // radius of 5 metres
+                .center(beaconsMap.get("FD8185988862").position)
+                .radius(2.538792345985605) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()
                 .center(beaconsMap.get("F15576CB0CF8").position)
-                .radius(24.15610905829817) // radius of 5 metres
+                .radius(6.2565368490208115) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
+
     }
 
+    public void hideAllCircles(){
+        for (String deviceMac : beaconsMap.keySet()){
+            beaconsMap.get(deviceMac).circle.setVisible(false);
+        }
+    }
     public void updateCircleOnMap(String deviceMac, float distanceReached){
-        beaconsMap.get(deviceMac).circle.remove();
-        Circle circle = mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get(deviceMac).position)
-                .radius(distanceReached) // radius of 5 metres
-                .strokeColor(Color.parseColor("#3170d6"))
-                .fillColor(0x552cdae0));
-        circle.setZIndex(2);
-        beaconsMap.get(deviceMac).circle = circle;
+        beaconsMap.get(deviceMac).circle.setVisible(true);
+        beaconsMap.get(deviceMac).circle.setRadius(distanceReached);
         // Update the market with a new title
         beaconsMap.get(deviceMac).marker.setTitle(deviceMac + " - Distance to Beacon: " + Float.toString(distanceReached));
     }
 
     public void updateEstimatedCurrentLocation(){
         getRequest(queue, coordinateEndPointURL);
-        estimatedCurrentLocationCircle.remove();
-        estimatedCurrentLocationCircle = mMap.addCircle(new CircleOptions()
-                .center(estimatedCurrentLocation)
-                .radius(0.5) // radius of 5 metres
-                .strokeColor(Color.parseColor("#ff0000"))
-                .fillColor(0x99ff0000));
-        estimatedCurrentLocationCircle.setZIndex(2);
+        estimatedCurrentLocationCircle.setCenter(estimatedCurrentLocation);
     }
 
     private void getRequest(RequestQueue queue, String url) {
@@ -300,26 +296,31 @@ public class Activity_1_Maps extends AppCompatActivity
                     @Override
                     public void onResponse(String response) {
                         if (!response.equals(null)) {
-                            try { // Filters irrelevant responses
+                            //try { // Filters irrelevant responses
                                 // response is formated into
                                 // line 1 is estimated location
                                 // the rest is mac_address and its distance reached
                                 String[] lines = response.split("\\r?\\n");
                                 Log.e("getRequest", "Response is: \n" + response);
-                                if (!lines[0].equals("null")){
+                                if (lines[0].equals("null")){
+                                    Toast.makeText( Activity_1_Maps.this,"Null response, could not estimate position", Toast.LENGTH_LONG).show();
+                                    Log.e("getRequest", "Could not estimate position");
+                                } else if (lines[0].equals("Not enough beacons")){
+                                    Toast.makeText( Activity_1_Maps.this,"Not enough beacons nearby to estimate your location!", Toast.LENGTH_LONG).show();
+                                    Log.e("getRequest", "Not enough beacons.");
+                                } else if (lines[0].equals("Failed to interpolate")) {
+                                    Toast.makeText(Activity_1_Maps.this, "There were 2 beacons nearby and failed to interpolate using last known position", Toast.LENGTH_LONG).show();
+                                    Log.e("getRequest", "Failed to interpolate");
+                                } else{
                                     Log.e("lines[0]", lines[0]);
                                     String[] estimatedLatLng = lines[0].split(",");
                                     Log.e("getRequest", "Estimated location is " + estimatedLatLng[0] + "," + estimatedLatLng[1]);
                                     estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
-
-                                } else if (lines[0].equals("Not enough beacons")){
-                                    Toast.makeText( Activity_1_Maps.this,"Not enough beacons nearby to estimate your location!", Toast.LENGTH_LONG).show();
-                                    Log.e("getRequest", "Not enough beacons.");
-                                } else{
-                                    Log.e("getRequest", "response: " + lines[0]);
                                 }
 
                                 // Update beacons distance reached
+                                hideAllCircles();
+                                Log.e("hideAllCircles", "Hide circles");
                                 for (int i = 1; i < lines.length; i=i+1 ){
                                     Log.e("lines[" + i + "]", lines[i]);
                                     String deviceMac = lines[i].split(",")[0];
@@ -327,9 +328,9 @@ public class Activity_1_Maps extends AppCompatActivity
                                     updateCircleOnMap(deviceMac, distanceReached);
                                     //Log.e(deviceMac, "distance reached: "+ Float.toString(distanceReached));
                                 }
-                            }catch (Exception e){
-                                Log.e("getRequest", "Irrelevant response: " + response);
-                            }
+                            //}catch (Exception e){
+                             //   Log.e("getRequest", "Irrelevant response: " + response);
+                            //}
                         } else {
                             Log.e("getRequest", "Your Array Response Data Null");
                         }
