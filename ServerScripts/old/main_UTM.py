@@ -167,18 +167,18 @@ def getTrilaterationResult(beacons):
         beacons[deviceMac].circle.radius = beacons[deviceMac].getDistanceToBeacon()
         circle_list.append(beacons[deviceMac].circle)
 
-        inner_points = []
-        for p in get_all_intersecting_points(circle_list):
-            if is_contained_in_circles(p, circle_list):
-                inner_points.append(p)
+    inner_points = []
+    for p in get_all_intersecting_points(circle_list):
+        if is_contained_in_circles(p, circle_list):
+            inner_points.append(p)
 
-        if len(inner_points) > 0:
-            center = get_polygon_center(inner_points)
-            (lat, lng) = utm.to_latlon(center.x, center.y, 30, 'U')
-            return lat, lng
-        else:
+    if len(inner_points) > 0:
+        center = get_polygon_center(inner_points)
+        (lat, lng) = utm.to_latlon(center.x, center.y, 30, 'U')
+        return lat, lng
+    else:
 
-            return "nan", "nan"
+        return "nan", "nan"
 
 if __name__ == "__main__":
     beaconsMap = {

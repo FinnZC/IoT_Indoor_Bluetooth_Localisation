@@ -58,7 +58,7 @@ public class Activity_1_Maps extends AppCompatActivity
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
     private LatLng startPosition = new LatLng(55.94448236370376, -3.1869789961960424);
-    private LatLng estimatedCurrentLocation = new LatLng(55.94446481451591,-3.186898924485519);
+    private LatLng estimatedCurrentLocation = new LatLng(55.94443009238231, -3.1869178291744706);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
@@ -251,22 +251,22 @@ public class Activity_1_Maps extends AppCompatActivity
             // Set Z index so that it appears above the overlayed image of the floor map
             beaconsMap.get(macAddress).circle.setZIndex(2);
         }
-
+/*
         /////// TEST ONLY REMOVE AFTER FINISH
         Circle circle = mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("FE12DEF2C943").position)
-                .radius(3.33) // radius of 5 metres
+                .center(beaconsMap.get("F15576CB0CF8").position)
+                .radius(1.7782794100389228) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0));
         circle.setZIndex(2);
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("C7BC919B2D17").position)
-                .radius(2.05) // radius of 5 metres
+                .center(beaconsMap.get("F17FB178EA3D").position)
+                .radius(4.27) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()
-                .center(beaconsMap.get("EC75A5ED8851").position)
-                .radius(1) // radius of 5 metres
+                .center(beaconsMap.get("FD8185988862").position)
+                .radius(5.60) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
         mMap.addCircle(new CircleOptions()
@@ -274,6 +274,32 @@ public class Activity_1_Maps extends AppCompatActivity
                 .radius(20) // radius of 5 metres
                 .strokeColor(Color.parseColor("#3170d6"))
                 .fillColor(0x302cdae0)).setZIndex(2);
+*/
+        /*
+        Imagine at EC 75
+        Circle circle = mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("FE12DEF2C943").position)
+                .radius(6.64) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x302cdae0));
+        circle.setZIndex(2);
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("C7BC919B2D17").position)
+                .radius(5.76) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x302cdae0)).setZIndex(2);
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("EC75A5ED8851").position)
+                .radius(1.8) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x302cdae0)).setZIndex(2);
+        mMap.addCircle(new CircleOptions()
+                .center(beaconsMap.get("C03B5CFA00B8").position)
+                .radius(20) // radius of 5 metres
+                .strokeColor(Color.parseColor("#3170d6"))
+                .fillColor(0x302cdae0)).setZIndex(2);
+
+         */
 
     }
 
@@ -319,7 +345,11 @@ public class Activity_1_Maps extends AppCompatActivity
                                     Log.e("lines[0]", lines[0]);
                                     String[] estimatedLatLng = lines[0].split(",");
                                     Log.e("getRequest", "Estimated location is " + estimatedLatLng[0] + "," + estimatedLatLng[1]);
-                                    estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
+                                    try {
+                                        estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
+                                    } catch (Exception e){
+                                        e.printStackTrace();
+                                    }
                                 }
 
                                 // Update beacons distance reached

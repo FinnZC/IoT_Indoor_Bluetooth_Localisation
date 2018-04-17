@@ -20,6 +20,8 @@ def getDistancev2(rssi, txPower):
      * d = 10 ^ ((TxPower - RSSI) / (10 * n))
      */
     """
+    #print("RSSI: " + str(rssi) + " txPower:" + str(txPower))
+    return math.pow(10, (txPower - rssi) / (10 * 2))
 
 
 

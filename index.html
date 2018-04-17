@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Circles</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      // This example creates circles on the map, representing populations in North
+      // America.
+
+      // First, create an object containing LatLng and population for each city.
+      var citymap = {
+        chicago: {
+          center: {lat: 41.878, lng: -87.629},
+          population: 2714856
+        },
+        newyork: {
+          center: {lat: 40.714, lng: -74.005},
+          population: 8405837
+        },
+        losangeles: {
+          center: {lat: 34.052, lng: -118.243},
+          population: 3857799
+        },
+        vancouver: {
+          center: {lat: 49.25, lng: -123.1},
+          population: 603502
+        }
+      };
+
+      var citymap = {
+        chicago: {
+          center: {lat: 41.878, lng: -87.629},
+          population: 2714856
+        },
+        newyork: {
+          center: {lat: 40.714, lng: -74.005},
+          population: 8405837
+        },
+        losangeles: {
+          center: {lat: 34.052, lng: -118.243},
+          population: 3857799
+        },
+        vancouver: {
+          center: {lat: 49.25, lng: -123.1},
+          population: 603502
+        }
+      };
+
+      function initMap() {
+        // Create the map.
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 30,
+          center: {lat: 55.94448236370376, lng: -3.1869789961960424},
+          mapTypeId: 'terrain'
+        });
+
+        var imageBounds = {
+          north: 55.944596588047396,
+          south: 55.94426201125635,
+          east: -3.186331540346145,
+          west: -3.1871650367975235
+        };
+
+        historicalOverlay = new google.maps.GroundOverlay(
+            'https://uoe-my.sharepoint.com/personal/s1546267_ed_ac_uk/Documents/Dropbox/Public/IoTCloudVisualisation/at_floor5_v4.png',
+            imageBounds);
+        historicalOverlay.setMap(map);
+
+        // Plot all Marker
+        var marker = new google.maps.Marker({
+          position: {lat: 55.94448236370376, lng: -3.1869789961960424},
+          map: map,
+          title: 'timestamp: 12312323'
+        });
+      }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0_OoCQ50NByGMC5OOc0FfLGm6194EjP8&callback=initMap">
+    </script>
+  </body>
+</html>

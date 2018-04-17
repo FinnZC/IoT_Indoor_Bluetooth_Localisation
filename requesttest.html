@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Using the XMLHttpRequest Object</h2>
+
+<div id="demo">
+<button type="button" onclick="loadXMLDoc()">Change Content</button>
+</div>
+
+<script>
+function loadXMLDoc() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("demo").innerHTML =
+      this.responseText;
+    }
+  };
+
+  xhttp.open("GET", "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything", true);
+  xhttp.setRequestHeader("Authorization", "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7")
+  xhttp.send();
+}
+</script>
+
+</body>
+</html>

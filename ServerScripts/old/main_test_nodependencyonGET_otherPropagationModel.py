@@ -92,26 +92,37 @@ if __name__ == "__main__":
     # data collected are saved on an excel file and input to this algorithm
     # https://www.kdnuggets.com/2017/02/removing-outliers-standard-deviation-python.html
     beaconsTxPower = {
-        "ED23C0D875CD": -97.25,
-        "E7311A8EB6D7": -95.97222222,
-        "C7BC919B2D17": -66.78431373,
-        "EC75A5ED8851": -90.24,
-        "FE12DEF2C943": -89.55555556,
-        "C03B5CFA00B8": -53.17647059,
-        "E0B83A2F802A": -99.88888889,
-        "F15576CB0CF8": -96.0,
-        "F17FB178EA3D": -88.38888889,
-        "FD8185988862": -95.02941176
+        "ED23C0D875CD": -97.25 + 5,
+        "E7311A8EB6D7": -95.97222222 + 5,
+        "C7BC919B2D17": -66.78431373 + 9, # right
+        "EC75A5ED8851": -90.24 + 5, # right
+        "FE12DEF2C943": -89.55555556 + 6, # right
+        "C03B5CFA00B8": -53.17647059 + 5,
+        "E0B83A2F802A": -99.88888889 + 5,
+        "F15576CB0CF8": -96.0 + 5,
+        "F17FB178EA3D": -88.38888889 + 5,
+        "FD8185988862": -95.02941176 + 10 # right
     }
     # Calibration required, I found this via eye inspection via my custom Android Google Maps app
     latLngCalibration = (0.00002, 0.0000025)
     oldlatLngCalibration = (0.000025, 0.0000025)
+     # Imagine at F155
+    a = "F15576CB0CF8"
+    rssi_a = -96
+    b = "F17FB178EA3D"
+    rssi_b = -96
+    c = "FD8185988862"
+    rssi_c = -100
+
+    """
+    # Imagine at EC75
     a = "EC75A5ED8851"
     rssi_a = -90.24
     b = "FE12DEF2C943"
     rssi_b = -100
     c = "C7BC919B2D17"
     rssi_c = -73
+    """
     baseA = base_station(beaconsLocation[a][0], beaconsLocation[a][1], getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])/1000) #in km
     print(a+ " " + str(getDistanceFromRSSI(rssi=rssi_a, txPower=beaconsTxPower[a])))
     baseB = base_station(beaconsLocation[b][0], beaconsLocation[b][1],  getDistanceFromRSSI(rssi=rssi_b, txPower=beaconsTxPower[b])/1000) #c0
