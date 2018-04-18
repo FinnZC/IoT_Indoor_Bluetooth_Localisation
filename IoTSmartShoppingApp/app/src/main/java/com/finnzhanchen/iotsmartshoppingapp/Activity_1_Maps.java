@@ -345,8 +345,10 @@ public class Activity_1_Maps extends AppCompatActivity
                                     Log.e("lines[0]", lines[0]);
                                     String[] estimatedLatLng = lines[0].split(",");
                                     Log.e("getRequest", "Estimated location is " + estimatedLatLng[0] + "," + estimatedLatLng[1]);
+
                                     try {
                                         estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
+                                        Toast.makeText(Activity_1_Maps.this, "New location estimated!", Toast.LENGTH_LONG).show();
                                     } catch (Exception e){
                                         e.printStackTrace();
                                     }

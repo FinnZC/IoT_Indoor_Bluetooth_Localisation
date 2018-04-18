@@ -12,6 +12,7 @@ def getDistance(rssi, txPower): # in metres
         accuracy = (0.89976) * math.pow(ratio, 7.7095) + 0.111
         return accuracy
 
+#https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
 def getDistancev2(rssi, txPower):
     """"
      * RSSI = TxPower - 10 * n * lg(d)
