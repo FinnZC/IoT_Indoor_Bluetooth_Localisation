@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Using the XMLHttpRequest Object</h2>
+
+<div id="demo">
+<button type="button" onclick="loadXMLDoc()">Change Content</button>
+</div>
+
+<script>
+  console.log("this.responseText");
+
+  var text = '[{ "_id": { "$oid": "5acf5ce46ca30726a42c6bc2" }, "timestamp": "2013", "device_mac": "mac_asd", "rssi": "-83" }, { "_id": { "$oid": "5acf5cf26ca30726a42c6bc3" }, "timestamp": "2013", "device_mac": "mac_asd", "rssi": "-83" }, { "_id": { "$oid": "5acf5d526ca30726b1460c94" }, "timestamp": "2013", "device_mac": "mac_asd", "rssi": "-83" }]'
+  var objects = JSON.parse(text)
+  alert(objects)
+  alert(objects[0])
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Using the XMLHttpRequest Object</h2>
+
+<div id="demo">
+<button type="button" onclick="loadXMLDoc()">Change Content</button>
+</div>
+
+<script>
+loadXMLDoc();
+function loadXMLDoc() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("demo").innerHTML = this.responseText;
+
+      alert(this.response);
+      alert(typeof this.response);
+      var objects = JSON.parse(this.response);
+      alert(objects);
+
+      var obj = objects[0];
+      alert(typeof obj);
+      alert(obj);
+      alert(obj.timestamp);
+      alert("Start iteration");
+
+      for (i=0; i < objects.length; i=i+1){
+        alert(objects[i].timestamp);
+      };
+
+    };
+  };
+
+  xhttp.open("GET", "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everythree", true);
+  xhttp.setRequestHeader("Authorization", "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7");
+  xhttp.send();
+}
+</script>
+
+</body>
+</html>
