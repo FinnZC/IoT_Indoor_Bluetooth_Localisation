@@ -1,8 +1,9 @@
 import requests
 import math
 import numpy as np
-
-
+import csv
+from datetime import date
+from time import mktime
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
 ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
@@ -345,6 +346,7 @@ def getThreeBeaconsForTrilateration(discoveredBeacons):
 
 def getSeconds(lastTimestamp):
     # Timestamp is of this string format "yyyy-MM-dd HH:mm:ss.SSS"
+    # Returns the total seconds passed since the start of the day
     hourMinuteSecondMillisecondReference = lastTimestamp.split(" ")[1].split(":")
     totalSecondsReference = float(hourMinuteSecondMillisecondReference[2]) \
                             + float(hourMinuteSecondMillisecondReference[1]) * 60 \
@@ -414,7 +416,7 @@ def computeResult(discoveredBeacons):
             # This is used to make the last known position as a beacon with the distance travelled by user as a
             # clue for interpolation
             timeDif = timeDifference(getSeconds(pastTimestamp), timeReference)
-            if timeDif <= 10 and timeDif >= 0:
+            if timeDif <= 20 and timeDif >= 0:
                 setUpCircleRadius(discoveredBeacons)
                 discoveredBeacons["LastKnownPosition"] = Beacon("LastKnownPosition", float(past_lat), float(past_lon),
                                                                 txPower=None)
@@ -464,6 +466,33 @@ def printTraces(locations):
         print(trace[2] + "," + trace[1] + ",0")
 
 
+def writeCVS(locations):
+    count = 0
+    with open('FinnZhanChenResults.csv', 'w', newline='') as csvfile:
+        fieldnames = ['timestamp', 'latitude', 'longitude']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        for i in range(len(locations) - 1):
+            content = locations[i].split(",")
+            #print(content)
+            currentTimestamp = content[0]
+            dateFormat = currentTimestamp.split(" ")[0].split("-")
+            #print(dateFormat)
+            start = date(int(dateFormat[0]), int(dateFormat[1]), int(dateFormat[2]))
+            unixTime = int(mktime(start.timetuple()) * 1000 + getSeconds(currentTimestamp) * 1000)
+            #print(unixTime)
+            writer.writerow({'timestamp': unixTime, 'latitude': content[1], 'longitude': content[2]})
+
+            # repeat the last estimated location every 3 seconds if there is not an estimated location in that interval
+            nextTimestamp = locations[i + 1].split(",")[0]
+            timeToNextTimestamp = timeDifference(getSeconds(currentTimestamp), getSeconds(nextTimestamp))
+            while timeToNextTimestamp > 3:
+                unixTime = unixTime + 3*1000
+                writer.writerow({'timestamp': unixTime, 'latitude': content[1], 'longitude': content[2]})
+                timeToNextTimestamp = timeToNextTimestamp - 3
+                count = count + 1
+
+    print(str(count))
+
 if __name__ == "__main__":
     beaconsMap = {
         "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25 + 10),
@@ -482,6 +511,7 @@ if __name__ == "__main__":
     discoveredBeacons = dict()  # a map of discovered Beacon objects
     timeWindow = 3  # Only take into account the RSSI of the past x seconds
     timeWindowForAlgorithm = 3  # run algorithm for every x seconds interval
+    ### NOTE THAT timeWindowForAlgorithm must be smaller than timeWindow
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
@@ -516,14 +546,14 @@ if __name__ == "__main__":
             rssi = int(item["rssi"])
             # only considers values in the past 3 seconds
             timeDif = timeDifference(timeReference, getSeconds(timestamp))
-            if abs(timeDif) > timeWindowForAlgorithm and not timeWindowForAlgorithmReached:
+            if timeDif > timeWindowForAlgorithm and not timeWindowForAlgorithmReached:
                 j = i
                 timeWindowForAlgorithmReached = True
                 # Update time reference for the next iteration
                 tempTimeReference = getSeconds(timestamp)
                 tempLastTimestamp = timestamp
 
-            if abs(timeDif) <= timeWindow:
+            if timeDif <= timeWindow:
                 #print("i: " + str(i) + " j:" + str(j) + " threeSecondReached: " + str(timeWindowForAlgorithmReached) + " timeDif: " + str(timeDif) + " | " + timestamp + " | " + deviceMac + " | " + str(rssi))
                 if not deviceMac in discoveredBeacons:
                     # convert metres to kilometres for the trilateration algorithm later
@@ -532,16 +562,21 @@ if __name__ == "__main__":
                 beaconsMap[deviceMac].pastRssi.append(rssi)
                 i = i + 1
             else:
-                computeResult(discoveredBeacons)
-                # Reset for next computation
-                for deviceMac in beaconsMap:
-                    beaconsMap[deviceMac].resetPastRssi()
-                discoveredBeacons = dict()
-                # Get ready for the next iteration
                 i = j
-                timeWindowForAlgorithmReached = False
-                timeReference = tempTimeReference
-                lastTimestamp = tempLastTimestamp
+                try:
+                    computeResult(discoveredBeacons)
+                    # Reset for next computation
+                    for deviceMac in beaconsMap:
+                        beaconsMap[deviceMac].resetPastRssi()
+                    discoveredBeacons = dict()
+                    # Get ready for the next iteration
+
+                    timeWindowForAlgorithmReached = False
+                    timeReference = tempTimeReference
+                    lastTimestamp = tempLastTimestamp
+                except:
+                    pass
 
     # printTraces(estimatedLocations)
     print("Number of estimated location: " + str(len(estimatedLocations)))
+    writeCVS(estimatedLocations)
