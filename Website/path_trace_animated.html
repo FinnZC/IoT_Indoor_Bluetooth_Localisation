@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>All Estimated Locations</title>
+    <title>Path Trace</title>
     <style>
       /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
@@ -26,12 +26,17 @@
       <button onclick="changeSpeed(500)">Fast (0.5s)</button>
       <button onclick="changeSpeed(250)">Very Fast (0.25s)</button>
       <button onclick="changeSpeed(100)">Extremely Fast (0.1s)</button>
-      <button onclick="changeSpeed(50)">Insanely Fast (0.5s)</button>
-      <button onclick="changeSpeed(10)">Godspeed (0.01s)</button>
+      <button onclick="changeSpeed(50)">Insanely Fast (0.05s)</button>
+      <button onclick="changeSpeed(10)">Godspeed (0.1s)</button>
+      <button id= "timestamp">Timestamp: </button>
     </div>
     <div id="map"></div>
     <script>
       var timeSpeed = 1000 // default 1 second per marker
+      function updateTimestamp(timestamp){
+        document.getElementById("timestamp").innerHTML= timestamp
+      }
+
       function changeSpeed(ms){
         timeSpeed = ms;
       };
@@ -67,6 +72,11 @@
             var objects = JSON.parse(this.response);
             // Reverse the order because the one at 0 is the latest
             for (i=0; i < objects.length; i=i+1){
+              // an item in objects contain the following info
+              // { "_id": { "$oid": "5ad7f0246ca30758da6a353b" },
+              // "lat": "55.94451888318382",
+              // "lon": "-3.1869132238175126" }
+              // "timestamp": "2018-04-17 19:46:50.214",
               //alert(objects[i].timestamp);
               var marker = new google.maps.Marker({
                 position: {lat: parseFloat(objects[i].lat), lng: parseFloat(objects[i].lon)},
@@ -74,6 +84,7 @@
                 title: objects[i].timestamp,
                 icon: './circle.png'
               });
+              updateTimestamp(objects[i].timestamp)
               await sleep(timeSpeed);
               marker.setMap(null);
 

@@ -1,9 +1,7 @@
 import requests
 import math
 import numpy as np
-import csv
-from datetime import date
-from time import mktime
+
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
 ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
@@ -326,7 +324,7 @@ class Beacon(object):
     def resetPastRssi(self):
         self.pastRssi = list()
 
-
+# Test function to check accuracy
 def getThreeBeaconsForTrilateration(discoveredBeacons):
     # Return 3 closest beacons as a list
     threeBeacons = dict()
@@ -371,7 +369,7 @@ def getTrilaterationResult(beacons):
     inner_points = []
     for p in get_all_intersecting_points(circle_list):
         # print("x: " + str(p.x) + " y:" + str(p.y))
-        #if is_contained_in_circles(p, circle_list):
+        # if is_contained_in_circles(p, circle_list):
         inner_points.append(p)
 
     if len(inner_points) > 0:
@@ -383,14 +381,15 @@ def getTrilaterationResult(beacons):
 
 
 def computeResult(discoveredBeacons):
-    global estimatedLocations
-    setUpCircleRadius(discoveredBeacons)
     # filter all beacons that has distance to user bigger than 20 metres because in the prototype, it is impossible
     # in AT lvl 5 and the further the distance the more unreliable
     # skip the dictionary changed size error by using a list copy of the keys
     for deviceMac in list(discoveredBeacons.keys()):
         if discoveredBeacons[deviceMac].getDistanceToBeacon() > 15:
             del discoveredBeacons[deviceMac]
+
+    setUpCircleRadius(discoveredBeacons)
+
     # Treats last known position as a beacon to help in interpolating the new position
     estimatedPositionResponse = requests.get(estimatedPositionUrl, headers=myheaders)
     if (len(estimatedPositionResponse.json()) > 0):
@@ -408,75 +407,38 @@ def computeResult(discoveredBeacons):
         if timeDif <= 5 and timeDif >= 0:
             setUpCircleRadius(discoveredBeacons)
             discoveredBeacons["LastKnownPosition"] = Beacon("LastKnownPosition", float(past_lat), float(past_lon),
-                                                                txPower=None)
-            discoveredBeacons["LastKnownPosition"].circle.radius = 1 * timeDif
+                                                            txPower=None)
+            discoveredBeacons["LastKnownPosition"].circle.radius = 0.5 * timeDif
             estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
             if (str(estimated_lat) != "nan" or str(estimated_lon) != "nan"):
                 # Successful estimated the position
                 # post estimated position to the Cloud
                 requests.post(estimatedPositionUrl, data={"timestamp": lastTimestamp, "lat": repr(estimated_lat),
-                                                              "lon": repr(estimated_lon)}, headers=myheaders)
+                                                          "lon": repr(estimated_lon)}, headers=myheaders)
                 # print("successfuly interpolated last position with 2 beacons")
-                string = lastTimestamp + "," + str(estimated_lat) + "," + str(estimated_lon)
-                print(string)  # might need to calibrate the algorithm response
-                estimatedLocations.append(string)
-                print("Successfully estimated position using last known position")
+                print(str(estimated_lat) + "," + str(estimated_lon))
                 return
             else:
                 # Cannot estimate because there is no overlapping areas between the base stations
                 # print("Failed to interpolate")
                 del discoveredBeacons["LastKnownPosition"]
 
-    # Could not interpolate, so get center of the intersections of the 2 beacons
+    # Whether last known position exists or not, interpolate position with discovered beacon
     estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
     if (str(estimated_lat) != "nan" or str(estimated_lon) != "nan"):
-        # Successful estimated the position, post estimated position to the Cloud
+        # Successful estimated the position
+        # post estimated position to the Cloud
         requests.post(estimatedPositionUrl, data={"timestamp": lastTimestamp, "lat": repr(estimated_lat),
                                                       "lon": repr(estimated_lon)}, headers=myheaders)
-
-        string = lastTimestamp + "," + str(estimated_lat) + "," + str(estimated_lon)
-        print("Estimated position with known beacons")
-        print(string)  # might need to calibrate the algorithm response
-        estimatedLocations.append(string)
+        # print("successfuly interpolated last position with 2 beacons")
+        print(str(estimated_lat) + "," + str(estimated_lon))
+        return
     else:
-        # Cannot estimate because there is no overlapping areas between the base stations
-        print("Failed to interpolate")
-
-def printTraces(locations):
-    print("\n\n\n\n\n\n\n\n")
-    for item in locations:
-        trace = item.split(",")
-        print(trace[2] + "," + trace[1] + ",0")
+        print("null")
 
 
-def writeCVS(locations):
-    count = 0
-    with open('FinnZhanChenResults.csv', 'w', newline='') as csvfile:
-        fieldnames = ['timestamp', 'latitude', 'longitude']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        for i in range(len(locations) - 1):
-            content = locations[i].split(",")
-            #print(content)
-            currentTimestamp = content[0]
-            dateFormat = currentTimestamp.split(" ")[0].split("-")
-            #print(dateFormat)
-            start = date(int(dateFormat[0]), int(dateFormat[1]), int(dateFormat[2]))
-            unixTime = int(mktime(start.timetuple()) * 1000 + getSeconds(currentTimestamp) * 1000)
-            #print(unixTime)
-            writer.writerow({'timestamp': unixTime, 'latitude': content[1], 'longitude': content[2]})
-
-            # repeat the last estimated location every 3 seconds if there is not an estimated location in that interval
-            nextTimestamp = locations[i + 1].split(",")[0]
-            timeToNextTimestamp = timeDifference(getSeconds(currentTimestamp), getSeconds(nextTimestamp))
-            while timeToNextTimestamp > 3:
-                unixTime = unixTime + 3*1000
-                writer.writerow({'timestamp': unixTime, 'latitude': content[1], 'longitude': content[2]})
-                timeToNextTimestamp = timeToNextTimestamp - 3
-                count = count + 1
-
-    print("Number of times the interval between timestamps is bigger than 3 seconds: " + str(count))
 
 if __name__ == "__main__":
     txCalibration = 10
@@ -484,25 +446,21 @@ if __name__ == "__main__":
         "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25 + txCalibration),
         "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222+ txCalibration),
         "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -66.78431373+ txCalibration),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration), # - 2
-        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration),
+        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration - 3),
+        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration -5),
         "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059 + txCalibration),
         "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration),
         "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration),
         "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -88.38888889 + txCalibration),
         "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -95.02941176 + txCalibration)
     }
-
-    estimatedLocations = list()  # Keeps track of the successfully estimated locations
     discoveredBeacons = dict()  # a map of discovered Beacon objects
     timeWindow = 5  # Only take into account the RSSI of the past x seconds
-    timeWindowForAlgorithm = 3  # run algorithm for every x seconds interval
-    ### NOTE THAT timeWindowForAlgorithm must be smaller than timeWindow
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path2'
-    estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything'
+    estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/androidlive'
 
     readingsResponse = requests.get(readingsUrl, headers=myheaders)
 
@@ -516,29 +474,19 @@ if __name__ == "__main__":
     if len(readingsResponse.json()) > 0:
         json = readingsResponse.json()
         # This is used as a reference timestamp to get all RSSI readings in the past x seconds
-        lastTimestamp = json[0]["timestamp"]  # Get first timestamp
+        i = len(json) - 1
+        lastTimestamp = json[i]["timestamp"]  # Get first timestamp
         timeReference = getSeconds(lastTimestamp)
-
-        # Start iteration from the oldest item (oldest beacon info)
+        # Start iteration from the latest item (newest beacon info)
         # Read all readings from the past timeWindow seconds and compute estimated location
 
-        i = 0
-        j = 0  # saves which index is when the timeWindowForAlgorithm seconds reached
-        timeWindowForAlgorithmReached = False
-
-        while (i < len(json)):
+        while (i >= 0):
             item = json[i]
             timestamp = item["timestamp"]
             deviceMac = item["device_mac"]
             rssi = int(item["rssi"])
             # only considers values in the past 3 seconds
-            timeDif = timeDifference(timeReference, getSeconds(timestamp))
-            if timeDif > timeWindowForAlgorithm and not timeWindowForAlgorithmReached:
-                j = i
-                timeWindowForAlgorithmReached = True
-                # Update time reference for the next iteration
-                tempTimeReference = getSeconds(timestamp)
-                tempLastTimestamp = timestamp
+            timeDif = timeDifference(getSeconds(timestamp), timeReference)
 
             if timeDif <= timeWindow:
                 #print("i: " + str(i) + " j:" + str(j) + " threeSecondReached: " + str(timeWindowForAlgorithmReached) + " timeDif: " + str(timeDif) + " | " + timestamp + " | " + deviceMac + " | " + str(rssi))
@@ -547,23 +495,12 @@ if __name__ == "__main__":
                     discoveredBeacons[deviceMac] = beaconsMap[deviceMac]
                 # record seen rssi value in the past timeWindow seconds to beacons
                 beaconsMap[deviceMac].pastRssi.append(rssi)
-                i = i + 1
+                i = i - 1
             else:
-                i = j
-                try:
-                    computeResult(discoveredBeacons)
-                    # Reset for next computation
-                    for deviceMac in beaconsMap:
-                        beaconsMap[deviceMac].resetPastRssi()
-                    discoveredBeacons = dict()
-                    # Get ready for the next iteration
+                computeResult(discoveredBeacons)
+                for deviceMac in discoveredBeacons:
+                    # discoveredBeacons[deviceMac].debug()
+                    print(beaconsMap[deviceMac].deviceMac + "," + str(beaconsMap[deviceMac].getDistanceToBeacon()))
+                break
 
-                    timeWindowForAlgorithmReached = False
-                    timeReference = tempTimeReference
-                    lastTimestamp = tempLastTimestamp
-                except:
-                    pass
 
-    # printTraces(estimatedLocations)
-    print("Number of estimated location: " + str(len(estimatedLocations)))
-    writeCVS(estimatedLocations)

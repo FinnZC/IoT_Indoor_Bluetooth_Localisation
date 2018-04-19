@@ -57,8 +57,8 @@ public class Activity_1_Maps extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private final String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
     private final String coordinateEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/ep/main";
-    private LatLng startPosition = new LatLng(55.94448236370376, -3.1869789961960424);
-    private LatLng estimatedCurrentLocation = new LatLng(55.94443009238231, -3.1869178291744706);
+    private LatLng startPosition = new LatLng(55.94448393625199,-3.1868280842900276);
+    private LatLng estimatedCurrentLocation = new LatLng(0, 0);
     private Circle estimatedCurrentLocationCircle;
     private RequestQueue queue;
 
@@ -326,7 +326,7 @@ public class Activity_1_Maps extends AppCompatActivity
                     @Override
                     public void onResponse(String response) {
                         if (!response.equals(null)) {
-                            //try { // Filters irrelevant responses
+                            try { // Filters irrelevant responses
                                 // response is formated into
                                 // line 1 is estimated location
                                 // the rest is mac_address and its distance reached
@@ -338,14 +338,13 @@ public class Activity_1_Maps extends AppCompatActivity
                                 } else if (lines[0].equals("Not enough beacons")){
                                     Toast.makeText( Activity_1_Maps.this,"Not enough beacons nearby to estimate your location!", Toast.LENGTH_LONG).show();
                                     Log.e("getRequest", "Not enough beacons.");
-                                } else if (lines[0].equals("Failed to interpolate")) {
+                                } else if (lines[0].equals("Failed to find using 2 beacons")) {
                                     Toast.makeText(Activity_1_Maps.this, "There were 2 beacons nearby and failed to interpolate using last known position", Toast.LENGTH_LONG).show();
                                     Log.e("getRequest", "Failed to interpolate");
-                                } else{
+                                } else if (lines[0].contains(",")){
                                     Log.e("lines[0]", lines[0]);
                                     String[] estimatedLatLng = lines[0].split(",");
                                     Log.e("getRequest", "Estimated location is " + estimatedLatLng[0] + "," + estimatedLatLng[1]);
-
                                     try {
                                         estimatedCurrentLocation = new LatLng(Float.parseFloat(estimatedLatLng[0]), Float.parseFloat(estimatedLatLng[1]));
                                         Toast.makeText(Activity_1_Maps.this, "New location estimated!", Toast.LENGTH_LONG).show();
@@ -364,9 +363,9 @@ public class Activity_1_Maps extends AppCompatActivity
                                     updateCircleOnMap(deviceMac, distanceReached);
                                     //Log.e(deviceMac, "distance reached: "+ Float.toString(distanceReached));
                                 }
-                            //}catch (Exception e){
-                             //   Log.e("getRequest", "Irrelevant response: " + response);
-                            //}
+                            }catch (Exception e){
+                                Log.e("getRequest", "Irrelevant response: " + response);
+                            }
                         } else {
                             Log.e("getRequest", "Your Array Response Data Null");
                         }
