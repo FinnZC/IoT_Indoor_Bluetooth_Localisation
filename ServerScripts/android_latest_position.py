@@ -274,6 +274,7 @@ def zone_number_to_central_longitude(zone_number):
     return (zone_number - 1) * 6 - 180 + 3
 
 
+
 ######################## WRITTEN BY STUNDET FINN ZHAN CHEN ########################################
 
 class Beacon(object):
@@ -382,6 +383,7 @@ def getTrilaterationResult(beacons):
         return lat, lng
     else:
         return "nan", "nan"
+
 
 
 def computeResult(discoveredBeacons):

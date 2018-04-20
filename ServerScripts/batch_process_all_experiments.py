@@ -5,6 +5,8 @@ import csv
 from datetime import date
 from time import mktime
 from haversine import haversine
+from scipy.optimize import minimize
+
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
 ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
@@ -89,6 +91,7 @@ def get_polygon_center(points):
 
 ######################## SCRIPTS FROM UTM PACKAGE  ###############################################
 # THIS IS COPY PASTED HERE SO THAT THE MAIN PACKAGE DOESN'T HAVE TO BE INSTALLED ON THE SERVER
+# I CONTACTED TOM TO INSTALL THIS PACKAGE BUT HE HAD TROUBLE IN INSTALLING IT SO THIS IS THE EASY ALTERNATIVE
 # SOURCE: https://pypi.org/project/utm/
 K0 = 0.9996
 
@@ -277,6 +280,43 @@ def zone_number_to_central_longitude(zone_number):
     return (zone_number - 1) * 6 - 180 + 3
 
 
+####################### EXISITING SOLUTION FOR OPTIMASATION ALGORITHM FOR INTERPOLATION ##########################
+# Source: https://www.alanzucconi.com/2017/03/13/positioning-and-trilateration/#part3
+# Heavily modified this to suit my needs
+
+# Mean Square Error
+# locations: [ (lat1, long1), ... ]
+# distances: [ distance1, ... ]
+def mse(x, locations, distances):
+    mse = 0.0
+    for location, distance in zip(locations, distances):
+        distance_calculated = haversine(x, location)
+        mse += math.pow(distance_calculated - distance, 2.0)
+    return mse / len(list(zip(locations, distances)))
+
+# initial_location: (lat, long)
+# locations: [ (lat1, long1), ... ]
+# distances: [ distance1,     ... ]
+def getOptimisedResult(initial_location, inner_points):
+    distances = list()
+    locations = list()
+    for point in inner_points:
+        coordinate = (point.x, point.y)
+        locations.append(coordinate)
+        distances.append(haversine(initial_location, coordinate))
+    #print(distances)
+    #print(locations)
+    result = minimize(
+        mse,                         # The error function
+        initial_location,            # The initial guess
+        args=(locations, distances), # Additional parameters for mse
+        method='L-BFGS-B',           # The optimisation algorithm
+        options={
+            'ftol':1e-5,         # Tolerance
+            'maxiter': 1e+7      # Maximum iterations
+        })
+    return result.x
+
 ######################## WRITTEN BY STUNDET FINN ZHAN CHEN ########################################
 
 class Beacon(object):
@@ -373,16 +413,17 @@ def getTrilaterationResult(beacons):
     for p in get_all_intersecting_points(circle_list):
         inner_points.append(p)
         # print("x: " + str(p.x) + " y:" + str(p.y))
-        # Gives more 3x more weight if all of circles intersects
+        # Gives more 2x more weight if all of circles intersects
         if is_contained_in_circles(p, circle_list):
             inner_points.append(p)
             inner_points.append(p)
-            inner_points.append(p)
-
 
     if len(inner_points) > 0:
         center = get_polygon_center(inner_points)
-        (lat, lng) = to_latlon(center.x, center.y, 30, 'U')
+        initialGuess = (center.x, center.y)
+        result = getOptimisedResult(initialGuess, inner_points)
+        #print("initial Guess: " +  str(initialGuess) + "  Optimised Result: " + str(result))
+        (lat, lng) = to_latlon(result[0], result[1], 30, 'U')
         return lat, lng
     else:
         return "nan", "nan"
@@ -495,7 +536,7 @@ class ExperimentPoints(object):
         self.endTime = self.getSeconds(endTimestamp)
         self.estimatedLocations = list()
 
-    def getSeconds(lastTimestamp):
+    def getSeconds(self, lastTimestamp):
         # Timestamp is of this string format "yyyy-MM-dd HH:mm:ss.SSS"
         # Returns the total seconds passed since the start of the day
         hourMinuteSecondMillisecondReference = lastTimestamp.split(" ")[1].split(":")
@@ -512,13 +553,14 @@ class ExperimentPoints(object):
             return False
 
     def getMeanDistanceError(self):
-        testPoint = (self.lat, self.lon)
+        testPoint = (self.lat, self.lng)
         errorDistaceInMetres = 0
         for location in self.estimatedLocations:
             errorDistaceInMetres = errorDistaceInMetres + haversine(testPoint, location)
-
-        return errorDistaceInMetres/len(location)
-
+        try:
+            return errorDistaceInMetres/len(self.estimatedLocations) * 1000 # in metres
+        except:
+            return -1
 
 def experimentWithResult(estimatedLocations):
     experimentPoints = {
@@ -538,6 +580,7 @@ def experimentWithResult(estimatedLocations):
         13 : ExperimentPoints(13, 55.9444326795766,-3.186710067093372, "2018-04-20 21:07:28.819",  "2018-04-20 21:08:01.388"),
         14 : ExperimentPoints(14, 55.94444920188229,-3.1866292655467987, "2018-04-20 21:08:51.265", "2018-04-20 21:09:22.805")
     }
+
     i = 0
     for location in estimatedLocations:
         content = location.split(",")
@@ -549,15 +592,15 @@ def experimentWithResult(estimatedLocations):
         else:
             #next experiment point as time is after the end of the timestamp for that testpoint
             i += 1
-    overallDistanceError = 0
+    overallMeanDistanceError = 0
     for testPointID in experimentPoints:
         testPointDistanceError = experimentPoints[testPointID].getMeanDistanceError()
-        overallDistanceError += testPointDistanceError
+        overallMeanDistanceError += testPointDistanceError
         print("Test Point: " + str(testPointID)
-              + "  Number of Estimations: " + str(experimentPoints[testPointID].estimatedLocations)
-              + "  Mean Distance Error: " + str(testPointDistanceError))
+              + "     Number of Estimated Locations: " + str(len(experimentPoints[testPointID].estimatedLocations))
+              + "     Mean Distance Error: " + str(testPointDistanceError))
 
-    print("Overall Mean Distance Error: " + str(overallDistanceError/len(estimatedLocations)))
+    print("Overall Mean Distance Error: " + str(overallMeanDistanceError/len(experimentPoints)))
 
 
 if __name__ == "__main__":
@@ -583,7 +626,7 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path3'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path1_non_moving'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
     # reset container
     requests.delete(estimatedPositionUrl, headers=myheaders)
