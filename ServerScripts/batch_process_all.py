@@ -506,7 +506,7 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path3'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path1_non_moving'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
     # reset container
     requests.delete(estimatedPositionUrl, headers=myheaders)

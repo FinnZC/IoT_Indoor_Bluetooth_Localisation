@@ -453,13 +453,13 @@ if __name__ == "__main__":
         "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration - 3),
         "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration -5),
         "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059 + txCalibration),
-        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration),
-        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration),
+        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration + 5),
+        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration ),
         "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -88.38888889 + txCalibration),
         "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -95.02941176 + txCalibration)
     }
     discoveredBeacons = dict()  # a map of discovered Beacon objects
-    timeWindow = 5  # Only take into account the RSSI of the past x seconds
+    timeWindow = 8  # Only take into account the RSSI of the past x seconds
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}

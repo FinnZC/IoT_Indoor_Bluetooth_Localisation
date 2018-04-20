@@ -522,21 +522,21 @@ class ExperimentPoints(object):
 
 def experimentWithResult(estimatedLocations):
     experimentPoints = {
-        0 : ExperimentPoints(0, 55.944485813784596,-3.1870034337043758, ""),
-        1 : ExperimentPoints(1, 55.944505527871485,-3.1869330257177357, ),
-        2 : ExperimentPoints(2, 55.944435683632705,-3.1869886815547948),
-        3 : ExperimentPoints(3, 55.944454834484915,-3.1868780404329295),
-        4 : ExperimentPoints(4, 55.9444709812745,-3.186771087348461),
-        5 : ExperimentPoints(5, 55.944386304430886,-3.186968564987183),
-        6 : ExperimentPoints(6, 55.944404704292914,-3.1868716701865196),
-        7 : ExperimentPoints(7, 55.944419349074806,-3.1867898628115654),
-        8 : ExperimentPoints(8, 55.94450684214359,-3.1868357956409454),
-        9 : ExperimentPoints(9, 55.944521486886856,-3.1867489591240883),
-        10 : ExperimentPoints(10, 55.94453500510652,-3.186670169234276),
-        11 : ExperimentPoints(11, 55.94448074444634,-3.186710067093372),
-        12 : ExperimentPoints(12, 55.94449294840768,-3.1866389885544772),
-        13 : ExperimentPoints(13, 55.9444326795766,-3.186710067093372),
-        14 : ExperimentPoints(14, 55.94444920188229,-3.1866292655467987)
+        0 : ExperimentPoints(0, 55.944485813784596,-3.1870034337043758, "2018-04-20 20:42:48.858", "2018-04-20 20:43:22.354"),
+        1 : ExperimentPoints(1, 55.944505527871485,-3.1869330257177357, "2018-04-20 20:44:41.462", "2018-04-20 20:45:52.854"),
+        2 : ExperimentPoints(2, 55.944435683632705,-3.1869886815547948, "2018-04-20 20:46:49.137", "2018-04-20 20:47:20.291"),
+        3 : ExperimentPoints(3, 55.944454834484915,-3.1868780404329295, "2018-04-20 20:48:22.563", "2018-04-20 20:48:53.792"),
+        4 : ExperimentPoints(4, 55.9444709812745,-3.186771087348461, "2018-04-20 20:49:59.386",  "2018-04-20 20:50:32.264"),
+        5 : ExperimentPoints(5, 55.944386304430886,-3.186968564987183,  "2018-04-20 20:51:29.559", "2018-04-20 20:52:50.815"),
+        6 : ExperimentPoints(6, 55.944404704292914,-3.1868716701865196, "2018-04-20 20:53:47.910", "2018-04-20 20:54:17.534"),
+        7 : ExperimentPoints(7, 55.944419349074806,-3.1867898628115654, "2018-04-20 20:55:17.741", "2018-04-20 20:55:56.786"),
+        8 : ExperimentPoints(8, 55.94450684214359,-3.1868357956409454,  "2018-04-20 20:57:51.264",  "2018-04-20 20:58:30.693"),
+        9 : ExperimentPoints(9, 55.944521486886856,-3.1867489591240883, "2018-04-20 21:00:28.571", "2018-04-20 21:01:00.317"),
+        10 : ExperimentPoints(10, 55.94453500510652,-3.186670169234276,  "2018-04-20 21:02:05.731", "2018-04-20 21:02:42.224"),
+        11 : ExperimentPoints(11, 55.94448074444634,-3.186710067093372, "2018-04-20 21:03:56.303", "2018-04-20 21:04:31.457"),
+        12 : ExperimentPoints(12, 55.94449294840768,-3.1866389885544772, "2018-04-20 21:05:27.696","2018-04-20 21:05:59.176"),
+        13 : ExperimentPoints(13, 55.9444326795766,-3.186710067093372, "2018-04-20 21:07:28.819",  "2018-04-20 21:08:01.388"),
+        14 : ExperimentPoints(14, 55.94444920188229,-3.1866292655467987, "2018-04-20 21:08:51.265", "2018-04-20 21:09:22.805")
     }
     i = 0
     for location in estimatedLocations:
@@ -554,6 +554,7 @@ def experimentWithResult(estimatedLocations):
         testPointDistanceError = experimentPoints[testPointID].getMeanDistanceError()
         overallDistanceError += testPointDistanceError
         print("Test Point: " + str(testPointID)
+              + "  Number of Estimations: " + str(experimentPoints[testPointID].estimatedLocations)
               + "  Mean Distance Error: " + str(testPointDistanceError))
 
     print("Overall Mean Distance Error: " + str(overallDistanceError/len(estimatedLocations)))
