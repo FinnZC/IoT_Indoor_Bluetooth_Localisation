@@ -669,7 +669,7 @@ public class InteractiveMapActivity extends FragmentActivity
         LatLng latLng = new LatLng(lat, lng);
         Location location = new Location(new Point3D(latLng), timestamp, source);
 
-        Log.i("setCurrentLoc", "setting currentLoc: " + latLng);
+        Log.e("setCurrentLoc", "setting currentLoc: " + latLng);
 
 
         locations.get(currentBuilding)[currentFloorIndex].add(location);

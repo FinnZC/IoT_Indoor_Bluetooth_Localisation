@@ -370,9 +370,14 @@ def getTrilaterationResult(beacons):
 
     inner_points = []
     for p in get_all_intersecting_points(circle_list):
-        # print("x: " + str(p.x) + " y:" + str(p.y))
-        #if is_contained_in_circles(p, circle_list):
         inner_points.append(p)
+        # print("x: " + str(p.x) + " y:" + str(p.y))
+        # Gives more 3x more weight if all of circles intersects
+        if is_contained_in_circles(p, circle_list):
+            inner_points.append(p)
+            inner_points.append(p)
+            inner_points.append(p)
+
 
     if len(inner_points) > 0:
         center = get_polygon_center(inner_points)
@@ -409,7 +414,7 @@ def computeResult(discoveredBeacons):
             setUpCircleRadius(discoveredBeacons)
             discoveredBeacons["LastKnownPosition"] = Beacon("LastKnownPosition", float(past_lat), float(past_lon),
                                                                 txPower=None)
-            discoveredBeacons["LastKnownPosition"].circle.radius = 1 * timeDif
+            discoveredBeacons["LastKnownPosition"].circle.radius = 0.5 * timeDif
             estimated_lat, estimated_lon = getTrilaterationResult(discoveredBeacons)
 
             if (str(estimated_lat) != "nan" or str(estimated_lon) != "nan"):
@@ -482,10 +487,10 @@ if __name__ == "__main__":
     txCalibration = 10
     beaconsMap = {
         "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25 + txCalibration),
-        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222+ txCalibration),
+        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222+ txCalibration+10),
         "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -66.78431373+ txCalibration),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration), # - 2
-        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration),
+        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration - 3),
+        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration -5),
         "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059 + txCalibration),
         "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration),
         "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration),
@@ -501,9 +506,10 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path2'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path3'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
-
+    # reset container
+    requests.delete(estimatedPositionUrl, headers=myheaders)
     readingsResponse = requests.get(readingsUrl, headers=myheaders)
 
     # ALL CONTENT OF THE PRINT STATEMENT HAVE BEEN FORMATTED IN THE FOLLOWING WAY
@@ -565,5 +571,7 @@ if __name__ == "__main__":
                     pass
 
     # printTraces(estimatedLocations)
+    print("Time Window: " + str(timeWindow))
+    print("Time Window for Algorithm: " + str(timeWindowForAlgorithm))
     print("Number of estimated location: " + str(len(estimatedLocations)))
     writeCVS(estimatedLocations)
