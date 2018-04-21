@@ -4,16 +4,6 @@ import numpy as np
 
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
-##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
-# Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
-
-def getDistanceFromRSSI(rssi, txPower):  # in metres
-    # tx values usually ranges from -59 to -65
-    if rssi == 0:
-        return -1
-    return math.pow(10, (txPower - rssi) / (10 * 2))
-
-
 ###################### EXISTING SOLUTION FOR TRILATERATION IN 2D ##############################
 # Source from https://github.com/noomrevlis/trilateration
 # http://en.wikipedia.org/wiki/Trilateration
@@ -303,7 +293,7 @@ class Beacon(object):
         return point(x, y)
 
     def getDistanceToBeacon(self):
-        return getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
+        return self.getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
 
     def getPastRssiAverage(self):
         if len(self.pastRssi) == 0:
@@ -319,6 +309,14 @@ class Beacon(object):
             final_list = [x for x in final_list if (x <= mean + 2 * sd)]
             return np.mean(final_list)
 
+    ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
+    # Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
+    def getDistanceFromRSSI(self, rssi, txPower):  # in metres
+        # tx values usually ranges from -59 to -65
+        if rssi == 0:
+            return -1
+        return math.pow(10, (txPower - rssi) / (10 * 2))
+    ###########################################################################################
     def debug(self):
         print(self.deviceMac + " " + str(self.pastRssi) + " " + str(self.getPastRssiAverage()))
 
@@ -371,9 +369,8 @@ def getTrilaterationResult(beacons):
     for p in get_all_intersecting_points(circle_list):
         inner_points.append(p)
         # print("x: " + str(p.x) + " y:" + str(p.y))
-        # Gives more 3x more weight if all of circles intersects
+        # Gives more 2x more weight if all of circles intersects
         if is_contained_in_circles(p, circle_list):
-            inner_points.append(p)
             inner_points.append(p)
             inner_points.append(p)
 
@@ -391,7 +388,7 @@ def computeResult(discoveredBeacons):
     # in AT lvl 5 and the further the distance the more unreliable
     # skip the dictionary changed size error by using a list copy of the keys
     for deviceMac in list(discoveredBeacons.keys()):
-        if discoveredBeacons[deviceMac].getDistanceToBeacon() > 15:
+        if discoveredBeacons[deviceMac].getDistanceToBeacon() > 10:
             del discoveredBeacons[deviceMac]
 
     setUpCircleRadius(discoveredBeacons)
@@ -447,21 +444,23 @@ def computeResult(discoveredBeacons):
 
 
 if __name__ == "__main__":
-    txCalibration = 10
+    # Found the rssi at 1 metres but still requires calibration. Did it manually with the help of my
+    # Android app visualising the distance reached by beacons and my real position.
     beaconsMap = {
-        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25 + txCalibration),
-        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222+ txCalibration + 10),
-        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -66.78431373+ txCalibration),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration - 3),
-        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration -5),
-        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059 + txCalibration),
-        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration + 5),
-        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration ),
-        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -88.38888889 + txCalibration),
-        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -95.02941176 + txCalibration)
+        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -93 + 6),
+        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -94 + 7),
+        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -61 + 4.5),
+        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -88 + 5),
+        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -87 + 2.5),
+        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -50),
+        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -96 + 10),
+        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -94 +5),
+        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -85),
+        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -90 +5)
     }
+
     discoveredBeacons = dict()  # a map of discovered Beacon objects
-    timeWindow = 8  # Only take into account the RSSI of the past x seconds
+    timeWindow = 4.5  # Only take into account the RSSI of the past x seconds
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}

@@ -9,16 +9,6 @@ from scipy.optimize import minimize
 
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
-##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
-# Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
-
-def getDistanceFromRSSI(rssi, txPower):  # in metres
-    # tx values usually ranges from -59 to -65
-    if rssi == 0:
-        return -1
-    return math.pow(10, (txPower - rssi) / (10 * 2))
-
-
 ###################### EXISTING SOLUTION FOR TRILATERATION IN 2D ##############################
 # Source from https://github.com/noomrevlis/trilateration
 # http://en.wikipedia.org/wiki/Trilateration
@@ -345,7 +335,7 @@ class Beacon(object):
         return point(x, y)
 
     def getDistanceToBeacon(self):
-        return getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
+        return self.getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
 
     def getPastRssiAverage(self):
         if len(self.pastRssi) == 0:
@@ -360,6 +350,16 @@ class Beacon(object):
             final_list = [x for x in self.pastRssi if (x >= mean - 2 * sd)]
             final_list = [x for x in final_list if (x <= mean + 2 * sd)]
             return np.mean(final_list)
+
+    ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
+    # Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
+
+    def getDistanceFromRSSI(self, rssi, txPower):  # in metres
+        # tx values usually ranges from -59 to -65
+        if rssi == 0:
+            return -1
+        return math.pow(10, (txPower - rssi) / (10 * 2))
+    #########################################################################################
 
     def debug(self):
         print(self.deviceMac + " " + str(self.pastRssi) + " " + str(self.getPastRssiAverage()))
@@ -436,7 +436,7 @@ def computeResult(discoveredBeacons):
     # in AT lvl 5 and the further the distance the more unreliable
     # skip the dictionary changed size error by using a list copy of the keys
     for deviceMac in list(discoveredBeacons.keys()):
-        if discoveredBeacons[deviceMac].getDistanceToBeacon() > 15:
+        if discoveredBeacons[deviceMac].getDistanceToBeacon() > 10:
             del discoveredBeacons[deviceMac]
     # Treats last known position as a beacon to help in interpolating the new position
     estimatedPositionResponse = requests.get(estimatedPositionUrl, headers=myheaders)
@@ -562,23 +562,23 @@ class ExperimentPoints(object):
         except:
             return -1
 
-def experimentWithResult(estimatedLocations):
+def path1_non_moving_experiment(estimatedLocations):
     experimentPoints = {
-        0 : ExperimentPoints(0, 55.944485813784596,-3.1870034337043758, "2018-04-20 20:42:48.858", "2018-04-20 20:43:22.354"),
-        1 : ExperimentPoints(1, 55.944505527871485,-3.1869330257177357, "2018-04-20 20:44:41.462", "2018-04-20 20:45:52.854"),
+        0 : ExperimentPoints(0, 55.944478679160206,-3.1869960576295857, "2018-04-20 20:42:48.858", "2018-04-20 20:43:22.354"),
+        1 : ExperimentPoints(1, 55.9444916341351,-3.186918273568153, "2018-04-20 20:44:41.462", "2018-04-20 20:45:52.854"),
         2 : ExperimentPoints(2, 55.944435683632705,-3.1869886815547948, "2018-04-20 20:46:49.137", "2018-04-20 20:47:20.291"),
         3 : ExperimentPoints(3, 55.944454834484915,-3.1868780404329295, "2018-04-20 20:48:22.563", "2018-04-20 20:48:53.792"),
         4 : ExperimentPoints(4, 55.9444709812745,-3.186771087348461, "2018-04-20 20:49:59.386",  "2018-04-20 20:50:32.264"),
-        5 : ExperimentPoints(5, 55.944386304430886,-3.186968564987183,  "2018-04-20 20:51:29.559", "2018-04-20 20:52:50.815"),
-        6 : ExperimentPoints(6, 55.944404704292914,-3.1868716701865196, "2018-04-20 20:53:47.910", "2018-04-20 20:54:17.534"),
-        7 : ExperimentPoints(7, 55.944419349074806,-3.1867898628115654, "2018-04-20 20:55:17.741", "2018-04-20 20:55:56.786"),
-        8 : ExperimentPoints(8, 55.94450684214359,-3.1868357956409454,  "2018-04-20 20:57:51.264",  "2018-04-20 20:58:30.693"),
-        9 : ExperimentPoints(9, 55.944521486886856,-3.1867489591240883, "2018-04-20 21:00:28.571", "2018-04-20 21:01:00.317"),
-        10 : ExperimentPoints(10, 55.94453500510652,-3.186670169234276,  "2018-04-20 21:02:05.731", "2018-04-20 21:02:42.224"),
+        5 : ExperimentPoints(5, 55.94440113697342,-3.186951801180839,  "2018-04-20 20:51:29.559", "2018-04-20 20:52:50.815"),
+        6 : ExperimentPoints(6, 55.94441427972785,-3.1868740171194077, "2018-04-20 20:53:47.910", "2018-04-20 20:54:17.534"),
+        7 : ExperimentPoints(7, 55.94442836124552,-3.186793215572834, "2018-04-20 20:55:17.741", "2018-04-20 20:55:56.786"),
+        8 : ExperimentPoints(8, 55.94450477685883,-3.1868331134319305,  "2018-04-20 20:57:51.264",  "2018-04-20 20:58:30.693"),
+        9 : ExperimentPoints(9, 55.94451791957813,-3.186751641333103, "2018-04-20 21:00:28.571", "2018-04-20 21:01:00.317"),
+        10 : ExperimentPoints(10, 55.94453106229293,-3.186670504510403,  "2018-04-20 21:02:05.731", "2018-04-20 21:02:42.224"),
         11 : ExperimentPoints(11, 55.94448074444634,-3.186710067093372, "2018-04-20 21:03:56.303", "2018-04-20 21:04:31.457"),
         12 : ExperimentPoints(12, 55.94449294840768,-3.1866389885544772, "2018-04-20 21:05:27.696","2018-04-20 21:05:59.176"),
-        13 : ExperimentPoints(13, 55.9444326795766,-3.186710067093372, "2018-04-20 21:07:28.819",  "2018-04-20 21:08:01.388"),
-        14 : ExperimentPoints(14, 55.94444920188229,-3.1866292655467987, "2018-04-20 21:08:51.265", "2018-04-20 21:09:22.805")
+        13 : ExperimentPoints(13, 55.94444075297686,-3.1867134198546414, "2018-04-20 21:07:28.819",  "2018-04-20 21:08:01.388"),
+        14 : ExperimentPoints(14, 55.94445464673151,-3.186629600822926, "2018-04-20 21:08:51.265", "2018-04-20 21:09:22.805")
     }
 
     i = 0
@@ -604,24 +604,25 @@ def experimentWithResult(estimatedLocations):
 
 
 if __name__ == "__main__":
-    txCalibration = 10
+    # Found the rssi at 1 metres but still requires calibration. Did it manually with the help of my
+    # Android app visualising the distance reached by beacons and my real position.
     beaconsMap = {
-        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -97.25 + txCalibration),
-        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -95.97222222+ txCalibration+10),
-        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -66.78431373+ txCalibration),
-        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -90.24 + txCalibration - 3),
-        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -89.55555556+ txCalibration -5),
-        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -53.17647059 + txCalibration),
-        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -99.88888889 + txCalibration),
-        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -96.0 + txCalibration),
-        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -88.38888889 + txCalibration),
-        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -95.02941176 + txCalibration)
+        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -93 + 6),
+        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -94 + 7),
+        "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -61 + 4.5),
+        "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -88 + 5),
+        "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -87 + 2.5),
+        "C03B5CFA00B8": Beacon("C03B5CFA00B8", 55.94449050761571, -3.1866483762860294, -50),
+        "E0B83A2F802A": Beacon("E0B83A2F802A", 55.94443774892113, -3.1867992505431175, -96 + 10),
+        "F15576CB0CF8": Beacon("F15576CB0CF8", 55.944432116316044, -3.186904862523079, -94 +5),
+        "F17FB178EA3D": Beacon("F17FB178EA3D", 55.94444938963575, -3.1869836524128914, -85),
+        "FD8185988862": Beacon("FD8185988862", 55.94449107087541, -3.186941407620907, -90 +5)
     }
 
     estimatedLocations = list()  # Keeps track of the successfully estimated locations
     discoveredBeacons = dict()  # a map of discovered Beacon objects
-    timeWindow = 5  # Only take into account the RSSI of the past x seconds
-    timeWindowForAlgorithm = 3  # run algorithm for every x seconds interval
+    timeWindow = 4.5  # Only take into account the RSSI of the past x seconds
+    timeWindowForAlgorithm = 3   # run algorithm for every x seconds interval
     ### NOTE THAT timeWindowForAlgorithm must be smaller than timeWindow
 
     # Authorisation header for GET and POST request
@@ -695,4 +696,4 @@ if __name__ == "__main__":
     print("Time Window for Algorithm: " + str(timeWindowForAlgorithm))
     print("Number of estimated location: " + str(len(estimatedLocations)))
     writeCVS(estimatedLocations)
-    experimentWithResult(estimatedLocations)
+    path1_non_moving_experiment(estimatedLocations)
