@@ -486,8 +486,8 @@ if __name__ == "__main__":
     # Found the rssi at 1 metres but still requires calibration. Did it manually with the help of my
     # Android app visualising the distance reached by beacons and my real position.
     beaconsMap = {
-        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -93 + 6),
-        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -94 + 7),
+        "ED23C0D875CD": Beacon("ED23C0D875CD", 55.9444578385393, -3.1866151839494705, -93 + 6 +3),
+        "E7311A8EB6D7": Beacon("E7311A8EB6D7", 55.94444244275808, -3.18672649562358860, -94 + 7 +7),
         "C7BC919B2D17": Beacon("C7BC919B2D17", 55.94452336441765, -3.1866540759801865, -61 + 4.5),
         "EC75A5ED8851": Beacon("EC75A5ED8851", 55.94452261340533, -3.1867526471614838, -88 + 5),
         "FE12DEF2C943": Beacon("FE12DEF2C943", 55.94448393625199, -3.1868280842900276, -87 + 2.5),
