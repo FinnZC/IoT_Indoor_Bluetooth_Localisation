@@ -355,7 +355,6 @@ class Beacon(object):
     # Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
 
     def getDistanceFromRSSI(self, rssi, txPower):  # in metres
-        # tx values usually ranges from -59 to -65
         if rssi == 0:
             return -1
         return math.pow(10, (txPower - rssi) / (10 * 2))
@@ -622,12 +621,12 @@ if __name__ == "__main__":
     estimatedLocations = list()  # Keeps track of the successfully estimated locations
     discoveredBeacons = dict()  # a map of discovered Beacon objects
     timeWindow = 4.5  # Only take into account the RSSI of the past x seconds
-    timeWindowForAlgorithm = 3   # run algorithm for every x seconds interval
+    timeWindowForAlgorithm = 1   # run algorithm for every x seconds interval
     ### NOTE THAT timeWindowForAlgorithm must be smaller than timeWindow
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path1_non_moving'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
     # reset container
     requests.delete(estimatedPositionUrl, headers=myheaders)
@@ -696,4 +695,4 @@ if __name__ == "__main__":
     print("Time Window for Algorithm: " + str(timeWindowForAlgorithm))
     print("Number of estimated location: " + str(len(estimatedLocations)))
     writeCVS(estimatedLocations)
-    path1_non_moving_experiment(estimatedLocations)
+    #path1_non_moving_experiment(estimatedLocations)

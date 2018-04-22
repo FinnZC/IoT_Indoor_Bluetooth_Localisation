@@ -312,7 +312,6 @@ class Beacon(object):
     ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
     # Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
     def getDistanceFromRSSI(self, rssi, txPower):  # in metres
-        # tx values usually ranges from -59 to -65
         if rssi == 0:
             return -1
         return math.pow(10, (txPower - rssi) / (10 * 2))
@@ -464,7 +463,7 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/everything'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/androidlive'
 
     readingsResponse = requests.get(readingsUrl, headers=myheaders)

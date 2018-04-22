@@ -16,10 +16,33 @@
         margin: 0;
         padding: 0;
       }
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        background-color: #fff;
+        border: 1px solid #999;
+        left: 25%;
+        padding: 5px;
+        position: absolute;
+        top: 10px;
+        z-index: 5;
+      }
     </style>
   </head>
   <body>
     <div id="floating-panel">
+      <button id= "timestamp">Timestamp: </button>
       <button onclick="changeSpeed(5000)">Very Slow (5s)</button>
       <button onclick="changeSpeed(3000)">Slow (3s)</button>
       <button onclick="changeSpeed(1000)">Medium (1s)</button>
@@ -28,7 +51,6 @@
       <button onclick="changeSpeed(100)">Extremely Fast (0.1s)</button>
       <button onclick="changeSpeed(50)">Insanely Fast (0.05s)</button>
       <button onclick="changeSpeed(10)">Godspeed (0.1s)</button>
-      <button id= "timestamp">Timestamp: </button>
     </div>
     <div id="map"></div>
     <script>

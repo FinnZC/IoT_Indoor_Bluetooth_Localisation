@@ -30,7 +30,7 @@ public class TimestampUtils {
 	 */
 	private static String getISO8601StringForDate(Date date) {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+1"));
 		return dateFormat.format(date);
 	}
 

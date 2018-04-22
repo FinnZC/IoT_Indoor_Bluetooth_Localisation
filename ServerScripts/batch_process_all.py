@@ -6,15 +6,6 @@ from datetime import date
 from time import mktime
 # EXTERNAL SOURCES HAVE BEEN CITED APPROPIATELY AND LOOK AT MAIN FUNCTION FOR STUDENT'S WORK (FINN ZHAN CHEN)
 
-##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
-# Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
-
-def getDistanceFromRSSI(rssi, txPower):  # in metres
-    # tx values usually ranges from -59 to -65
-    if rssi == 0:
-        return -1
-    return math.pow(10, (txPower - rssi) / (10 * 2))
-
 
 ###################### EXISTING SOLUTION FOR TRILATERATION IN 2D ##############################
 # Source from https://github.com/noomrevlis/trilateration
@@ -305,7 +296,7 @@ class Beacon(object):
         return point(x, y)
 
     def getDistanceToBeacon(self):
-        return getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
+        return self.getDistanceFromRSSI(rssi=self.getPastRssiAverage(), txPower=self.txPower)
 
     def getPastRssiAverage(self):
         if len(self.pastRssi) == 0:
@@ -320,6 +311,15 @@ class Beacon(object):
             final_list = [x for x in self.pastRssi if (x >= mean - 2 * sd)]
             final_list = [x for x in final_list if (x <= mean + 2 * sd)]
             return np.mean(final_list)
+
+    ##################### EXISING SOLUTION FOR CALCULATING DISTANCE FROM RSSI ################
+    # Source from https://stackoverflow.com/questions/22784516/estimating-beacon-proximity-distance-based-on-rssi-bluetooth-le
+
+    def getDistanceFromRSSI(self, rssi, txPower):  # in metres
+        if rssi == 0:
+            return -1
+        return math.pow(10, (txPower - rssi) / (10 * 2))
+    ###########################################################################################
 
     def debug(self):
         print(self.deviceMac + " " + str(self.pastRssi) + " " + str(self.getPastRssiAverage()))
@@ -423,9 +423,9 @@ def computeResult(discoveredBeacons):
                                                               "lon": repr(estimated_lon)}, headers=myheaders)
                 # print("successfuly interpolated last position with 2 beacons")
                 string = lastTimestamp + "," + str(estimated_lat) + "," + str(estimated_lon)
-                print(string)  # might need to calibrate the algorithm response
+                #print(string)  # might need to calibrate the algorithm response
                 estimatedLocations.append(string)
-                print("Successfully estimated position using last known position")
+                #print("Successfully estimated position using last known position")
                 return
             else:
                 # Cannot estimate because there is no overlapping areas between the base stations
@@ -441,12 +441,13 @@ def computeResult(discoveredBeacons):
                                                       "lon": repr(estimated_lon)}, headers=myheaders)
 
         string = lastTimestamp + "," + str(estimated_lat) + "," + str(estimated_lon)
-        print("Estimated position with known beacons")
-        print(string)  # might need to calibrate the algorithm response
+        #print("Estimated position with known beacons")
+        #print(string)  # might need to calibrate the algorithm response
         estimatedLocations.append(string)
     else:
         # Cannot estimate because there is no overlapping areas between the base stations
-        print("Failed to interpolate")
+        #print("Failed to interpolate")
+        pass
 
 def printTraces(locations):
     print("\n\n\n\n\n\n\n\n")
@@ -506,7 +507,7 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path2_moving'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
     # reset container
     requests.delete(estimatedPositionUrl, headers=myheaders)
@@ -574,4 +575,4 @@ if __name__ == "__main__":
     print("Time Window: " + str(timeWindow))
     print("Time Window for Algorithm: " + str(timeWindowForAlgorithm))
     print("Number of estimated location: " + str(len(estimatedLocations)))
-    writeCVS(estimatedLocations)
+    #writeCVS(estimatedLocations)

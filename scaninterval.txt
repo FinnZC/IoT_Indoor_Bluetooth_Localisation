@@ -1,0 +1,12 @@
+2000, 2000  = 30 seconds 
+1000, 1000 = 25
+1, 1 = 25s
+
+Without printf
+Server
+
+50 advertising interval, 11, 11 = 44 timestamps
+5000 adi, 11, 11 = 44 timestamps
+50 adi, 50, 50 = 36 timestamps
+1000, 20, 20 = 39 timestamps
+50, 10, 10 = 42 timestamps
