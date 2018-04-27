@@ -383,7 +383,7 @@ def getTrilaterationResult(beacons):
 
 
 def computeResult(discoveredBeacons):
-    # filter all beacons that has distance to user bigger than 20 metres because in the prototype, it is impossible
+    # filter all beacons that has distance to user bigger than 10 metres because in the prototype, it is impossible
     # in AT lvl 5 and the further the distance the more unreliable
     # skip the dictionary changed size error by using a list copy of the keys
     for deviceMac in list(discoveredBeacons.keys()):
@@ -463,7 +463,7 @@ if __name__ == "__main__":
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo3'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/androidlive'
 
     readingsResponse = requests.get(readingsUrl, headers=myheaders)

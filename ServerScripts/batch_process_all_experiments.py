@@ -431,7 +431,7 @@ def getTrilaterationResult(beacons):
 def computeResult(discoveredBeacons):
     global estimatedLocations
     setUpCircleRadius(discoveredBeacons)
-    # filter all beacons that has distance to user bigger than 20 metres because in the prototype, it is impossible
+    # filter all beacons that has distance to user bigger than 10 metres because in the prototype, it is impossible
     # in AT lvl 5 and the further the distance the more unreliable
     # skip the dictionary changed size error by using a list copy of the keys
     for deviceMac in list(discoveredBeacons.keys()):
@@ -621,24 +621,17 @@ if __name__ == "__main__":
     estimatedLocations = list()  # Keeps track of the successfully estimated locations
     discoveredBeacons = dict()  # a map of discovered Beacon objects
     timeWindow = 4.5  # Only take into account the RSSI of the past x seconds
-    timeWindowForAlgorithm = 1   # run algorithm for every x seconds interval
+    timeWindowForAlgorithm = 3   # run algorithm for every x seconds interval
     ### NOTE THAT timeWindowForAlgorithm must be smaller than timeWindow
 
     # Authorisation header for GET and POST request
     myheaders = {"Authorization": "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7"}
-    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo'
+    readingsUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/path1_non_moving'
     estimatedPositionUrl = 'http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/batchlocations'
     # reset container
     requests.delete(estimatedPositionUrl, headers=myheaders)
     readingsResponse = requests.get(readingsUrl, headers=myheaders)
 
-    # ALL CONTENT OF THE PRINT STATEMENT HAVE BEEN FORMATTED IN THE FOLLOWING WAY
-    # LINE 1 CONTAINS THE ESTIMATED POSITION OR ERROR MESSAGES
-    # ALL OTHER LIENS CONTAINS THE BEACON'S DEVICE_MAC AND THE DISTANCE TO BEACON
-    # NOTE WHEN THERE ARE NO ENOUGH BEACONS FOR TRILATERATION, THE LAST KNOWN POSITION WILL BE USED
-    # TO INTERPOLATE THE NEW POSITION. IN THIS CASE THE LAST KNOWN POSITION IS TREATED AS A BEACON
-    # AND ITS DISTANCE TO LAST KNOWN POSITION IS ALSO PRINTED AS A BEACON
-    # THE PURPOSE OF THIS IS SO THAT IT CAN BE VISUALISED ON THE ANDROID APP
     if len(readingsResponse.json()) > 0:
         json = readingsResponse.json()
         # This is used as a reference timestamp to get all RSSI readings in the past x seconds
@@ -695,4 +688,4 @@ if __name__ == "__main__":
     print("Time Window for Algorithm: " + str(timeWindowForAlgorithm))
     print("Number of estimated location: " + str(len(estimatedLocations)))
     writeCVS(estimatedLocations)
-    #path1_non_moving_experiment(estimatedLocations)
+    path1_non_moving_experiment(estimatedLocations)

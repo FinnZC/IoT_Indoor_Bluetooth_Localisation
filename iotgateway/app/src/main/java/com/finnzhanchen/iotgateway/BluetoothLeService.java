@@ -66,7 +66,7 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mBluetoothGatt;
     private RequestQueue queue;
     private String AUTHORISATION_BEARER = "Bearer 57:3996aa851ea17f9dd462969c686314ed878c0cf7";
-    private String databaseEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo";
+    private String databaseEndPointURL = "http://glenlivet.inf.ed.ac.uk:8080/api/v1/svc/apps/data/docs/demo3";
 
     private int mConnectionState = STATE_DISCONNECTED;
 
@@ -174,7 +174,7 @@ public class BluetoothLeService extends Service {
                 queue.start();
                 postRequest(queue, databaseEndPointURL, timestamp, macAddress, Integer.toString(rssi));
                 Log.e(TAG, "Timestamp: " + timestamp + "  MAC Address: " + macAddress + "  RSSI: " + rssi);
-                intent.putExtra(EXTRA_DATA, "MAC Address: " + macAddress + "RSSI: " + rssi);
+                intent.putExtra(EXTRA_DATA, "MAC Address: " + macAddress + "  RSSI: " + rssi);
             }
 
         }else if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())){
