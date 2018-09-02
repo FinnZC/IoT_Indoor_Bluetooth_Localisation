@@ -1,6 +1,0 @@
-3s = 152 empty spots filled 
-2s =97
-1.5s = 77
-1s = 60
-0.5s = 52
-

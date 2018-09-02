@@ -1,0 +1,3 @@
+# Androd App Gateway
+An Android App has been developed using the template from
+https://github.com/googlesamples/android-BluetoothLeGatt to subscribe to a Bluetooth device. Then this template is further customised by the author and act as the gateway between the IoT device and the Cloud. The app is subscribed to the custom characteristics of the IoT device and is notified of every new value update. For every notification from the IoT device, the app creates a timestamp and decodes the received MAC address and RSSI into strings. These three key-value pairs are posted to the Cloud via REST API with the appropriate authorisation headers.
